@@ -2,49 +2,58 @@ import numpy as np
 from FES import FES
 from evaluation import evaluation
 from classification import classification
+from accuracy import accuracy
 import scipy.io
-mat = scipy.io.loadmat('matlab_Data')
 
-def LFS(Train, TrainLables, Test, TestLables, Para):
 
-    gamma = Para["gamma"]
-    tau = Para["tau"]
-    alpha = Para["alpha"]
-    sigma = Para["sigma"]
-    NBeta = Para["NBeta"]
-    NRRP = Para["NRRP"]
-    knn = 1
+def LFS(train, train_lables, test, test_labels, para):
 
-    N = np.shape(Train)[1]
-    M = np.shape(Train)[0]
+    impurity_level      = para["gamma"]     # Impurity Level (GAMMA, γ)
+    n_iterations        = para["tau"]       # Number of iterations (TAU, T)
+    neighbour_weight    = para["alpha"]     # Neighbouring sample weighting (ALPHA, α)
+    max_selected_features = para["sigma"]   # Max number of selected features per representative point (SIGMA, σ)
+    n_beta              = para["NBeta"]     # number of distinct beta (BETA, β)
+    nrrp                = para["NRRP"]      # Number randomized rounding permutations
+    m_rows              = train.shape[0]    # Number of rows in the training data
+    n_columns           = train.shape[1]    # Number of columns in the training data
+    knn                 = 1
+
+    fstar               = np.zeros((m_rows, n_columns))  # Preallocated space for results
+    fstar_lin           = np.zeros((m_rows, n_columns))  # preallocated space for results
     
-    fstar = np.zeros((M, N)) #(M,N)
-    fstarLin = np.zeros((M, N))
-    
-    tmp = []
-    
-    for j in range(0,tau):
-        b, a, EpsilonMax[:,1] = FES(alpha, M, N, Train, TrainLables, fstar, sigma)
-        TBTemp, TRTemp, Bratio, feasib, tmp = evaluation(alpha, NBeta, N, EpsilonMax, b, a, Train, TrainLables, gamma, NRRP, knn)
+    # On every iteration, compute something
+    for j in range(n_iterations):
         
-        W1 = 0
-        feasib = 0
-        Bratio[W1] = -1 * np.inf
-        tmp, I1 = np.max(Bratio, [], 2)
-        for i in range(0, N):
-            fstar[:, i] = TBTemp[:, i, I1(i)]
-            fstarLin[:, i] = TRTemp[:, i, I1(i)]
+        # compute something probably feature selection?
+        b, a, epsilon_max = FES(neighbour_weight, m_rows, n_columns, train, train_lables, fstar, max_selected_features)
+
+        # compute something
+        tb_temp, tr_temp, b_ratio, feasib, _ = evaluation(neighbour_weight, n_beta, n_columns, epsilon_max, b, a, train, train_lables, impurity_level, nrrp, knn)
+
+        W1 = feasib == 1
+        b_ratio[W1] = -np.inf
+
+        ##
+        I1 = np.max(b_ratio, axis=1)
+        for i in range(n_columns):
+            fstar[:, i] = tb_temp[ :, i, I1[i] ]
+            fstar_lin[:, i] = tr_temp[ :, i, I1[i] ]
             
-    [sClass1, sClass2] = classification(Train, TrainLables, N, Test, fstar, gamma, knn)
-        
-    return [fstar, fstarLin, ErCls1, ErCls2, ErClassification]
+    [s_class_1, s_class_2] = classification(train, train_lables, n_columns, test, fstar, impurity_level, knn)
+    [_, _, er_cls_1, er_cls_2, er_classification] = accuracy(s_class_1, s_class_2, test_labels)
+    return [fstar, fstar_lin, er_cls_1, er_cls_2, er_classification]
 
-LFS(mat['Train'], mat['TrainLables'], mat['Test'], mat['TestLables'],{
+mat = scipy.io.loadmat('matlab_Data')
+LFS(
+    mat['Train'],
+    mat['TrainLables'],
+    mat['Test'],
+    mat['TestLables'],{
     'gamma': 0.2,
     'tau': 2,
     'sigma': 1,
-    'alpha': 1,
+    'alpha': 19,
     'NBeta': 20,
     'NRRP': 2000
-
 })
+

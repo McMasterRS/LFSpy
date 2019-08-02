@@ -1,13 +1,13 @@
 import numpy as np
-import ClassSimM as ClassSimM
+from ClassSimM import ClassSimM
 
-def classification(patterns,targets,N,test,fstar,gamma,knn):
+def classification(patterns, targets, N, test, fstar, gamma, knn):
+    """ """
+    H = test.shape(2)
+    s_class_1_sphere_knn = np.zeros(1, H)
+    s_class_2_sphere_knn = np.zeros(1, H)
 
-    H=shape[test,2]
-    S_Class1_sphereKNN=np.zeros[1,H]
-    S_Class2_sphereKNN=np.zeros[1,H]
     for t in range(H) :
-        [S_Class1_sphereKNN[1,t], S_Class2_sphereKNN[1,t]]= ClassSimM(test[:,t],N,patterns,targets,fstar,gamma,knn)
-            
+        s_class_1_sphere_knn[1, t], s_class_2_sphere_knn[1,t], _ = ClassSimM(test[:, t], N, patterns, targets, fstar, gamma, knn)
 
-    return [S_Class1_sphereKNN,S_Class2_sphereKNN]
+    return [s_class_1_sphere_knn, s_class_2_sphere_knn]
