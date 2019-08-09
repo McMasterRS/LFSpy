@@ -7,7 +7,8 @@ TBTemp=zeros(M,N,NBeta);
 Bratio=-2*ones(N,NBeta);
 feasib=zeros(N,NBeta);
 radiuos=zeros(N,NBeta);
-parfor i=1:N
+%parfor i=1:N
+for i=1:N
     for n=1:NBeta
         [TT, BB, b1, ~, ~, exitflag]=GH_LP_Opt(NBeta,n,EpsilonMax(i,1),b(i,:),a(i,:),...
             M,alpha);

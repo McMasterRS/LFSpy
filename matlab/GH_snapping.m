@@ -22,6 +22,7 @@ for y=1:No_unq
         feasib(1,y)=1;
         wit_dist(y)=a*TT_binary_temp;
         Btw_dist(y)=b*TT_binary_temp;
+        [Aa, Bb] = find(TT_binary_temp == 1);
         [radious(y), DR(y), FAR(y)]=GH_radiousRepX(N,1,patterns,targets,TT_binary_temp,gamma,i,knn);
     end
 end

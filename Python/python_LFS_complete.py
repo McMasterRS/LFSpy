@@ -26,12 +26,20 @@ def LFS(train, train_lables, test, test_labels, para):
     
     # On every iteration, compute something
     for j in range(n_iterations):        
-
         # compute something probably feature selection?
         b, a, epsilon_max = FES(neighbour_weight, m_rows, n_columns, train, train_lables, fstar, max_selected_features)
 
         # compute something
-        tb_temp, tr_temp, b_ratio, feasib, _ = evaluation(neighbour_weight, n_beta, n_columns, epsilon_max, b, a, train, train_lables, impurity_level, nrrp, knn)        
+        pr.enable()
+
+        tb_temp, tr_temp, b_ratio, feasib, _ = evaluation(neighbour_weight, n_beta, n_columns, epsilon_max, b, a, train, train_lables, impurity_level, nrrp, knn)
+        pr.disable()
+        s = io.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
+        print('Done')
 
         W1 = feasib == 0
         b_ratio[W1] = -np.inf
@@ -41,15 +49,12 @@ def LFS(train, train_lables, test, test_labels, para):
         for i in range(n_columns):
             fstar[:, i] = tb_temp[ :, i, I1[i] ]
             fstar_lin[:, i] = tr_temp[ :, i, I1[i] ]
-
-    [s_class_1, s_class_2] = classification(train, train_lables, n_columns, test, fstar, impurity_level, knn) # DONE
-    [_, _, er_cls_1, er_cls_2, er_classification] = accuracy(s_class_1, s_class_2, test_labels) # DONE
+            
+    [s_class_1, s_class_2] = classification(train, train_lables, n_columns, test, fstar, impurity_level, knn)
+    [_, _, er_cls_1, er_cls_2, er_classification] = accuracy(s_class_1, s_class_2, test_labels)
     return [fstar, fstar_lin, er_cls_1, er_cls_2, er_classification]
 
 mat = scipy.io.loadmat('matlab_Data')
-i_data = scipy.io.loadmat('interm_data')
-comp = scipy.io.loadmat('sample_matlab_results')
-
 fstar, fstar_lin, er_cls_1, er_cls_2, er_classification = LFS(
     mat['Train'],
     mat['TrainLables'],
@@ -63,9 +68,5 @@ fstar, fstar_lin, er_cls_1, er_cls_2, er_classification = LFS(
     'NRRP': 2000
 })
 
+
 print(fstar, fstar_lin, er_cls_1, er_cls_2, er_classification)
-print((fstar == comp['fstar']).all())
-print((fstar_lin == comp['fstarLin']).all())
-print((er_cls_1 == comp['ErCls1']).all())
-print((er_cls_2 == comp['ErCls2']).all())
-print((er_classification == comp['ErClassification']).all())

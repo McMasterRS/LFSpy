@@ -47,7 +47,8 @@ for j=1:tau
     
     W1=feasib==0; Bratio(W1)=-Inf;
     [~, I1]=max(Bratio,[],2);
-    parfor i=1:N
+    %parfor i=1:N
+    for i=1:N
         fstar(:,i)=TBTemp(:,i,I1(i));
         fstarLin(:,i)=TRTemp(:,i,I1(i));
     end

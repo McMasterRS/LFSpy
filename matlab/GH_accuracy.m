@@ -32,7 +32,7 @@ erCls2(n)=erCls2(n)*100;
 
 ErClassification(n)=1-(DCls1(n)+DCls2(n))/NTest;
 ErClassification(n)=ErClassification(n)*100;
-
+disp('')
 
 
 

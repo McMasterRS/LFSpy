@@ -14,7 +14,8 @@ NoNNC2knn=zeros(1,N);
 NoNNC1=zeros(1,N);
 NoNNC2=zeros(1,N);
 radious=zeros(1,N);
-parfor i=1:N
+%parfor i=1:N
+for i=1:N
     %%
     XpatternsPr=patterns.*repmat(fstar(:,i),1,N);
     testPr=test.*fstar(:,i);

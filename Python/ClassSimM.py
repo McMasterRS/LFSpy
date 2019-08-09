@@ -3,49 +3,64 @@ import math
 
 def ClassSimM(test, N, patterns, targets, fstar, gamma, knn):
 
-    n_nt_cls_l = sum(targets)
-    n_nt_cls_2 = N-n_nt_cls_l
-    M = shape(patterns,1)
+    n_nt_cls_l = np.sum(targets) # count the number of targets
+    n_nt_cls_2 = N-n_nt_cls_l # fidn the remaining somethings
+    M = patterns.shape[0] 
     NC1 = 0
     NC2 = 0
-    S = inf * np.ones(1,N)
+    S = np.Inf * np.ones((1, N))
 
-    NoNNC1knn = np.zeros(1,N)
-    NoNNC2knn = np.zeros(1,N)
-    NoNNC1 = np.zeros(1,N)
-    NoNNC2 = np.zeros(1,N)
-    radious = np.zeros(1,N)
+    NoNNC1knn = np.zeros((1,N))
+    NoNNC2knn = np.zeros((1,N))
+    NoNNC1 = np.zeros((1,N))
+    NoNNC2 = np.zeros((1,N))
+    radious = np.zeros((1,N))
     for i in range(N) :
         
-        XpatternsPr = patterns*tile(fstar[:,i],1,N)
-        testPr = test*fstar[:,i]
-        Dist = abs(math.sqrt(sum((XpatternsPr-tile(testPr,1,N))**2,1)))
-        [min1 , _] = np.msort(Dist,2)
+        XpatternsPr = patterns*fstar[:, i][...,None]
+        testPr = test*fstar[:, i]
+        Dist = np.abs(np.sqrt(np.sum((-testPr[...,None] + XpatternsPr)**2,0)))
+        # Dist = np.abs(np.sqrt(np.sum((XpatternsPr-testPr[..., None])**2,1)))
+        min1 = np.msort(Dist)
         
         min_Uniq = np.unique(min1)
-        m = 0
+        m = -1
         No_nereser = 0
         while No_nereser<knn:
             m = m+1
-            a1 = min_Uniq(m)
+            a1 = min_Uniq[m]
             NN = Dist <= a1
-            No_nereser = sum(NN)
-        NoNNC1knn[1,i] = sum(NN and targets)
-        NoNNC2knn[1,i] = sum(NN and not(targets))
+            No_nereser = np.sum(NN)
+        NoNNC1knn[0, i] = np.sum(NN & targets)
+        NoNNC2knn[0, i] = np.sum(NN & ~targets)
         
-        A = where(fstar[:,i] == 0)
-        if len(A)<M:
-            patterns_P = patterns
-            patterns_P[A,:] = []
-            test_P = test
-            test_P[A,:] = []
-            Dist_test = abs(math.sqrt(sum((patterns_P[:,i]-test_P)**2,1)))
-            Dist_pat = abs(math.sqrt(sum((patterns_P-tile(patterns_P[:,i],1,N))**2,1)))
-            [EE_Rep , _] = np.msort(Dist_pat)
+        A = np.where(fstar[:,i] == 0)
+        if A[0].shape[0] <M:
+            a_mask = np.ones(patterns.shape[0], dtype=bool)
+            a_mask[A] = False
+            patterns_P = patterns[a_mask]
+            test_P = test[a_mask]
+            # test_P[A,:] = []
+            testA = patterns_P[:,i] - test_P
+            Dist_test = np.abs(
+                np.sqrt(
+                    np.sum(
+                        (patterns_P[:,i]-test_P)**2
+                    ,0)
+                )
+            )
+            Dist_pat = np.abs(
+                np.sqrt(
+                    np.sum(
+                        (patterns_P-patterns_P[:, i][..., None])**2
+                    ,0)
+                )
+            )
+            EE_Rep = np.msort(Dist_pat)
             remove = 0
-            if targets[1,i] == 1:
+            if targets[0, i] == 1:
                 UNQ = np.unique(EE_Rep)
-                k = 0
+                k = -1
                 NC1 = NC1+1
                 if remove !=  1:
                     Next = 1
@@ -53,11 +68,11 @@ def ClassSimM(test, N, patterns, targets, fstar, gamma, knn):
                         k = k+1
                         r = UNQ[k]
                         F1 = (Dist_pat == r)
-                        NoCls1r = sum(F1 and targets)
-                        NoCls2r = sum(F1 and not(targets))
+                        NoCls1r = np.sum(F1 & targets)
+                        NoCls2r = np.sum(F1 & ~targets)
                         F2 = (Dist_pat <= r)
-                        NoCls1clst = sum(F2 and targets)-1
-                        NoCls2clst = sum(F2 and not(targets))
+                        NoCls1clst = np.sum(F2 & targets)-1
+                        NoCls2clst = np.sum(F2 & ~targets)
                         if gamma*(NoCls1clst/(n_nt_cls_l-1))<(NoCls2clst/n_nt_cls_2):
                             Next = 0
                             if (k-1) == 0:
@@ -70,31 +85,34 @@ def ClassSimM(test, N, patterns, targets, fstar, gamma, knn):
                             
                             r = 1*r
                             F2 = (Dist_pat <= r)
-                            NoCls1clst = sum(F2 and targets)-1
-                            NoCls2clst = sum(F2 and not(targets))
-                        
+                            NoCls1clst = np.sum(F2 & targets)-1
+                            NoCls2clst = np.sum(F2 & ~targets)
                     if Dist_test <= r:
-                        patterns_P = patterns*tile(fstar[:,i],1,N)
+                        patterns_P = patterns*fstar[:,i][...,None]
                         test_P = test*fstar[:,i]
-                        Dist = abs(math.sqrt(sum((patterns_P-repmat(test_P,1,N))**2,1)))
-                        [min1 , _] = np.msort(Dist,2)
+                        Dist = np.abs(
+                            np.sqrt(
+                                np.sum(
+                                    (patterns_P-test_P[...,None])**2,0
+                                    )))
+                        min1 = np.msort(Dist)
                         min_Uniq = np.unique(min1)
-                        m = 0
+                        m = -1
                         No_nereser = 0
                         while No_nereser<knn:
                             m = m+1
-                            a1 = min_Uniq(m)
+                            a1 = min_Uniq[m]
                             NN = Dist <= a1
-                            No_nereser = sum(NN)
+                            No_nereser = np.sum(NN)
                         
-                        NoNNC1[1,i] = sum(NN and targets)
-                        NoNNC2[1,i] = sum(NN and not(targets))
-                        if NoNNC1[1,i]>NoNNC2[1,i]:
-                            S[1,i] = 1
+                        NoNNC1[0,i] = np.sum(NN & targets)
+                        NoNNC2[0,i] = np.sum(NN & ~targets)
+                        if NoNNC1[0,i]>NoNNC2[0,i]:
+                            S[0,i] = 1
                             
-            if targets[1,i] == 0:
-                UNQ = unique(EE_Rep)
-                k = 0
+            if targets[0,i] == 0:
+                UNQ = np.unique(EE_Rep)
+                k = -1
                 NC2 = NC2+1
                 if remove !=  1:
                     Next = 1
@@ -102,11 +120,11 @@ def ClassSimM(test, N, patterns, targets, fstar, gamma, knn):
                         k = k+1
                         r = UNQ[k]
                         F1 = (Dist_pat == r)
-                        NoCls1r = sum(F1 and targets)
-                        NoCls2r = sum(F1 and not(targets))
+                        NoCls1r = np.sum(F1 & targets)
+                        NoCls2r = np.sum(F1 & ~targets)
                         F2 = (Dist_pat <= r)
-                        NoCls1clst = sum(F2 and targets)
-                        NoCls2clst = sum(F2 and not(targets))-1
+                        NoCls1clst = np.sum(F2 & targets)
+                        NoCls2clst = np.sum(F2 & ~targets)-1
                         if  gamma*(NoCls2clst/(n_nt_cls_2-1))<(NoCls1clst/n_nt_cls_l):
                             Next = 0
                             if (k-1) == 0:
@@ -119,38 +137,43 @@ def ClassSimM(test, N, patterns, targets, fstar, gamma, knn):
                             
                             r = 1*r
                             F2 = (Dist_pat <= r)
-                            NoCls1clst = sum(F2 and targets)
-                            NoCls2clst = sum(F2 and not(targets))-1
+                            NoCls1clst = np.sum(F2 & targets)
+                            NoCls2clst = np.sum(F2 & ~targets)-1
                        
                     if Dist_test <= r:
-                        patterns_P = patterns*tile(fstar[:,i],1,N)
-                        test_P = test*fstar[:,i]
-                        Dist = abs(math.sqrt(sum((patterns_P-tile(test_P,1,N))**2,1)))
-                        [min1 , _] = np.msort(Dist,2)
-                        min_Uniq = unique(min1)
-                        m = 0
+                        patterns_P = patterns*fstar[:,i][..., None]
+                        test_P = test*fstar[:, i]
+                        Dist = np.abs(
+                            np.sqrt(
+                                np.sum(
+                                    (patterns_P-test_P[..., None])**2,0)))
+                        min1 = np.msort(Dist)
+                        min_Uniq = np.unique(min1)
+                        m = -1
                         No_nereser = 0
                         while No_nereser<knn:
                             m = m+1
-                            a1 = min_Uniq(m)
+                            a1 = min_Uniq[m]
                             NN = Dist <= a1
-                            No_nereser = sum(NN)
+                            No_nereser = np.sum(NN)
                     
-                        NoNNC1[1,i] = sum(NN and targets)
-                        NoNNC2[1,i] = sum(NN and not(targets))
-                        if NoNNC2[1,i] > NoNNC1[1,i]:
-                            S[1,i] = 1
+                        NoNNC1[0,i] = np.sum(NN & targets)
+                        NoNNC2[0,i] = np.sum(NN & ~targets)
+                        if NoNNC2[0,i] > NoNNC1[0,i]:
+                            S[0,i] = 1
                       
-        radious[1, i] = r
+        radious[0, i] = r
+
     Q1 = (NoNNC1) > (NoNNC2knn)
     Q2 = (NoNNC2) > (NoNNC1knn)
-    S_Class1 = sum(Q1 and targets) / NC1
-    S_Class2 = sum(Q2 and not targets) / NC2
+    S_Class1 = np.sum(Q1 & targets) / NC1
+    S_Class2 = np.sum(Q2 & ~targets) / NC2
 
     if S_Class1 == 0 and S_Class2 == 0:
-        Q1 = (NoNNC1knn)>(NoNNC2knn)
-        Q2 = (NoNNC2knn)>(NoNNC1knn)
-        S_Class1 = sum(Q1 and targets)/NC1
-        S_Class2 = sum(Q2 and not targets)/NC2
+        Q1 = (NoNNC1knn) > (NoNNC2knn)
+        Q2 = (NoNNC2knn) > (NoNNC1knn)
+        S_Class1 = np.sum(Q1 & targets)/NC1
+        test = Q2 & np.logical_not(targets)
+        S_Class2 = np.sum(Q2 & np.logical_not(targets))/NC2
 
     return [S_Class1, S_Class2, radious]

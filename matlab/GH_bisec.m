@@ -12,7 +12,8 @@ a=zeros(N,M);
 EpsilonMax=zeros(N,1);
 weight=zeros(N,N);
 
-parfor i=1:N    
+%parfor i=1:N    
+for i=1:N    
     cls1=targets(1,i);
     Temp_Tr=patterns;
     Temp_Tr(:,i)=[];
