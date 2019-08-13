@@ -1,11 +1,12 @@
 import numpy as np
 from numpy import matlib
 from scipy.optimize import fsolve, linprog
+from scipy.io import loadmat
 
 # Start Feature Selection Algorithm
 def FES(neighbour_weight, M, N, patterns, targets, fstar, max_selected_features):
     
-    # Preallocate arrays for parallel processing
+    # Preallocate arrays
     a = np.zeros((N, M)) # a is something
     b = np.zeros((N, M)) # b is something
     EpsilonMax = np.zeros((N, 1)) # EpsilonMax is something
@@ -17,7 +18,7 @@ def FES(neighbour_weight, M, N, patterns, targets, fstar, max_selected_features)
         i_mask[i]       = False
 
 
-        cls1            = targets[0, i]             # Targets without the i'th column
+        cls1            = targets[0, i]             # 
         temp_training   = patterns[:, i_mask]       # Patterns with out the i'th column
         temp_class      = targets[:, i_mask]        # Slice out the i'th column from targets
         Ncls1           = int(np.sum(temp_class))   # Count the number of 1s in targets
@@ -87,13 +88,13 @@ def FES(neighbour_weight, M, N, patterns, targets, fstar, max_selected_features)
 
         weight[:, i] = np.append(np.append(normalized_w1.T, normalized_w2.T), [0]) # we append the two and add a zero for padding
         w = weight[:, i]
-
+        f_Sparsity = w[-1] * np.ones((M, 1))
 
         for n in range(Ncls1):
-            f_cls1_temp = f_cls1_temp + w[n] * ro[:, n]
+            f_cls1_temp = f_cls1_temp + (w[n] * ro[:, n])[..., None]
+
         for n in range (Ncls2):
-            f_cls2_temp = f_cls2_temp + w[n + Ncls1] * theta[:, n]
-        f_Sparsity = w[-1] * np.ones((M, 1))
+            f_cls2_temp = f_cls2_temp + (w[n + Ncls1] * theta[:, n])[..., None]
 
         if cls1==1:
             f_temp = f_Sparsity + f_cls2_temp
@@ -105,7 +106,7 @@ def FES(neighbour_weight, M, N, patterns, targets, fstar, max_selected_features)
             b[i, :] = f_temp.T / Ncls1
             a[i, :] = f_cls2_temp.T / Ncls2
 
-        BB =  np.concatenate((np.ones((1, M)), -np.ones((1, M))), axis=0)
+        BB = np.concatenate((np.ones((1, M)), -np.ones((1, M))), axis=0)
         b1 = np.array([[neighbour_weight, -1]]).T
         lb = np.zeros((M, 1))
         ub = np.ones((M, 1))

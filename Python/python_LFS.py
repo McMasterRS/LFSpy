@@ -3,13 +3,17 @@ from FES import FES
 from evaluation import evaluation
 from classification import classification
 from accuracy import accuracy
-import scipy.io
-import cProfile, pstats, io
-pr = cProfile.Profile()
-global count
-count = 0
+from scipy.io import loadmat
 
 def LFS(train, train_lables, test, test_labels, para):
+
+    def validate_FES(b, a, EpsilonMax, i):
+        data = loadmat('./data/FES'+str(i+1))
+        _a = np.isclose(a, data['a'])
+        _b = np.isclose(b, data['b'])
+        _c = np.isclose(EpsilonMax, data['EpsilonMax'], rtol=0.0001)
+        print("validate_FES",_a.all() and _b.all() and _c.all())
+        return _a.all() and _b.all() and _c.all()
 
     impurity_level      = para["gamma"]     # Impurity Level (GAMMA, γ)
     n_iterations        = para["tau"]       # Number of iterations (TAU, T)
@@ -26,13 +30,19 @@ def LFS(train, train_lables, test, test_labels, para):
     
     # On every iteration, compute something
     for j in range(n_iterations):        
+        data = loadmat('./data/FES'+str(j+1))
 
         # compute something probably feature selection?
         b, a, epsilon_max = FES(neighbour_weight, m_rows, n_columns, train, train_lables, fstar, max_selected_features)
+        validate_FES(b, a, epsilon_max, j)
+
+        a = data['a']
+        b = data['b']
+        epsilon_max = data['EpsilonMax']
 
         # compute something
         tb_temp, tr_temp, b_ratio, feasib, _ = evaluation(neighbour_weight, n_beta, n_columns, epsilon_max, b, a, train, train_lables, impurity_level, nrrp, knn)        
-
+        
         W1 = feasib == 0
         b_ratio[W1] = -np.inf
 
@@ -46,9 +56,9 @@ def LFS(train, train_lables, test, test_labels, para):
     [_, _, er_cls_1, er_cls_2, er_classification] = accuracy(s_class_1, s_class_2, test_labels) # DONE
     return [fstar, fstar_lin, er_cls_1, er_cls_2, er_classification]
 
-mat = scipy.io.loadmat('matlab_Data')
-i_data = scipy.io.loadmat('interm_data')
-comp = scipy.io.loadmat('sample_matlab_results')
+mat = loadmat('matlab_Data')
+i_data = loadmat('interm_data')
+comp = loadmat('sample_matlab_results')
 
 fstar, fstar_lin, er_cls_1, er_cls_2, er_classification = LFS(
     mat['Train'],

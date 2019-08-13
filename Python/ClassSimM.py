@@ -161,7 +161,6 @@ def ClassSimM(test, N, patterns, targets, fstar, gamma, knn):
                         NoNNC2[0,i] = np.sum(NN & ~targets)
                         if NoNNC2[0,i] > NoNNC1[0,i]:
                             S[0,i] = 1
-                      
         radious[0, i] = r
 
     Q1 = (NoNNC1) > (NoNNC2knn)
