@@ -43,17 +43,16 @@ def evaluation (alpha, NBeta, N, EpsilonMax, b, a, patterns, targets, gamma, NRR
 
     for i in range(N) :
         for n in range(NBeta):
-            if i == 5 and n == 3:
-                TT, BB, b1, exit_flag = gh_lp_opt(NBeta, n+1, EpsilonMax[i, 0], b[i, :], a[i, :], M, alpha)
-                validate_gh_lp_opt(TT, BB, b1, exit_flag, i, n)
-                # data = loadmat('./data/TT_dump')
-                # TT = data['TT_dump'][i, n, :][..., None] # Fixing my TT values gives correct results for no_unq
+            TT, BB, b1, exit_flag = gh_lp_opt(NBeta, n+1, EpsilonMax[i, 0], b[i, :], a[i, :], M, alpha)
+            validate_gh_lp_opt(TT, BB, b1, exit_flag, i, n)
+            # data = loadmat('./data/TT_dump')
+            # TT = data['TT_dump'][i, n, :][..., None] # Fixing my TT values gives correct results for no_unq
 
-                if exit_flag == 1:
-                    Bratio[i, n], T_temp, feasib[i, n], radiuos[i, n] = gh_snapping(NRRP, M, i, BB, b1, gamma, TT, patterns, targets, N, a[i, :], b[i, :], knn, n)
-                    validate_gh_snapping(Bratio[i, n], T_temp, feasib[i, n], radiuos[i, n], i, n)
-                    if feasib[i, n] == 1:
-                        TBTemp[:, i, n] = T_temp
-                        TRTemp[:, i, n] = TT[:, 0]
+            if exit_flag == 1:
+                Bratio[i, n], T_temp, feasib[i, n], radiuos[i, n] = gh_snapping(NRRP, M, i, BB, b1, gamma, TT, patterns, targets, N, a[i, :], b[i, :], knn, n)
+                validate_gh_snapping(Bratio[i, n], T_temp, feasib[i, n], radiuos[i, n], i, n)
+                if feasib[i, n] == 1:
+                    TBTemp[:, i, n] = T_temp
+                    TRTemp[:, i, n] = TT[:, 0]
 
     return [TBTemp, TRTemp, Bratio, feasib, radiuos]

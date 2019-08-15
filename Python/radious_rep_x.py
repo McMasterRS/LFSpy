@@ -40,11 +40,11 @@ def radious_rep_x(N, no_rep_points, patterns, targets, t, gamma, y, knn):
                             r = 0.5 * (unique_values[k-1] + unique_values[k])
                             nc_1 = nc_1 + 1
                         if r == 0:
-                            r = 10 ** -6
-                        r = 1 * r
+                            r = 0.000001
+                        r = 1 * r # pointless?
                         f2 = (dist_rep <= r)
-                        nc_ls_1_clst = np.sum(f2 & targets)-1
-                        nc_ls_2_clst = np.sum(f2 & np.logical_not(targets))
+                        nc_ls_1_clst = np.sum(f2 & targets)-1 # same as outside
+                        nc_ls_2_clst = np.sum(f2 & np.logical_not(targets)) # same as outside
                         q = np.nonzero(f2 == 1)[0]
                         dr = 0
                         far = 0
@@ -76,7 +76,7 @@ def radious_rep_x(N, no_rep_points, patterns, targets, t, gamma, y, knn):
                                 dr = dr + 1
                             if targets[0, q[u]] == 0 and no_nn_c1 > (no_nn_c2-1):
                                 far = far+1
-
+###########################################################################################3
             if targets[0, y] == 0:
                 unique_values = np.unique(ee_rep)
                 k = -1
