@@ -23,7 +23,7 @@ def LFS(train, train_lables, test, test_labels, para):
     nrrp                = para["NRRP"]      # Number randomized rounding permutations
     m_rows              = train.shape[0]    # Number of rows in the training data
     n_columns           = train.shape[1]    # Number of columns in the training data
-    knn                 = 1
+    knn                 = 1                 # Possibly k nearest neighbours
 
     fstar               = np.zeros((m_rows, n_columns))  # Preallocated space for results
     fstar_lin           = np.zeros((m_rows, n_columns))  # preallocated space for results

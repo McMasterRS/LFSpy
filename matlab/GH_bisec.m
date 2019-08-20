@@ -100,7 +100,7 @@ for i=1:N
     lb=zeros(M,1);
     ub=ones(M,1);
     opt_lin=optimset('Display','off','Algorithm','interior-point');
-    [~,fval,exitflag]=linprog(-b(i,:)',BB,b1,[],[],lb,ub,[],opt_lin);
+    [TT,fval,exitflag,output,lambda]=linprog(-b(i,:)',BB,b1,[],[],lb,ub,[],opt_lin);
     if exitflag~=1
         fprintf('Not feasible');
     end

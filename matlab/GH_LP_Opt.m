@@ -5,6 +5,6 @@ b1=[alpha;-1;-epsilon];
 BB=[ones(1,M);-ones(1,M);-b];
 lb=zeros(M,1);
 ub=ones(M,1);
-opt_lin=optimset('Display','off','Algorithm','interior-point');
+opt_lin=optimset('Display','iter','Algorithm','interior-point');
 [TT,fval,exitflag,output,lambda]=linprog(a',BB,b1,[],[],lb,ub, [], opt_lin);
 %[TT,~,exitflag]=linprog(a',BB,b1,[],[],lb,ub, [], opt_lin);
