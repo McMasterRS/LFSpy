@@ -26,6 +26,9 @@ WANDERING = 0
 # Local Feature Selection
 ###########################################
 
+def linprog_callback(res):
+    pass
+    
 class LocalFeatureSelection():
 
     def __init__(self, alpha=19, gamma=0.2, tau=2, sigma=1, n_beta=20, nrrp=2000, knn=1):
@@ -64,28 +67,6 @@ class LocalFeatureSelection():
             mask_excluded = np.ones(n_observations, dtype=bool)
             without_observation = np.ones(n_observations, dtype=bool)
 
-            # # for each observation, calculate
-            # for i_obs, observation in enumerate(training_data.T, start=0):
-            #     observation = observation[..., None]
-            #     without_observation[i_obs] = False
-            #     observation_cls = training_labels[0, i_obs]
-            #     n_total_cls[observation_cls] = n_total_cls[observation_cls] - 1
-            #     labels_without_observation = training_labels[0, without_observation].astype(bool)
-            #     data_without_observation = training_data[:, without_observation]
-
-            #     observation_delta = [
-            #         (-data_without_observation[:, labels_without_observation] + observation)**2,     # How close is this observation from all other observations of class 0? (THETA)
-            #         (-data_without_observation[:, (labels_without_observation^1)] + observation)**2 # How close is this observation from all other observations of class 1? (RO)
-            #     ]
-            #     for i_fstar, fstar in enumerate(self.fstar.T, start=0):
-            #         fstar = fstar[..., None]
-            #         observation_delta[0] = np.sqrt(np.sum(fstar*observation_delta[0], axis=0))
-            #         observation_delta[0] = np.exp(-observation_delta[0] - np.min(observation_delta[0]) ** 2 / self.alpha)
-            #         observation_delta[1] = np.sqrt(np.sum(fstar*observation_delta[1], axis=0))
-            #         observation_delta[1] = np.exp(-observation_delta[1] - np.min(observation_delta[1][i_fstar]) ** 2 / self.alpha)
-
-            #     average_delta = np.mean(np.concatenate(observation_delta[0], observation_delta[1]))
-
             # I forget to clean something up, so its wrong answers for every run but the first
             for j in range(0, n_observations): # temporarily set to 2, change back to 0 in production
                 mask_excluded[j] = False # Mask out the j'th observation
@@ -119,7 +100,7 @@ class LocalFeatureSelection():
                         np.exp(-dist_alpha - np.min(dist_alpha) ** 2 / self.alpha)
                     )) 
 
-                # what is the average delta, difference.
+                # what is the average difference.
                 average_weight = np.mean(weight_matrix, axis=0)[mask_excluded]
                 w1 = average_weight[:n_remaining_cls[1]] # I think this is the average weight for all class 1
                 w2 = average_weight[n_remaining_cls[1]:] # i think this is the average weight for all class 2
@@ -133,7 +114,7 @@ class LocalFeatureSelection():
                 normalized_w2 = w2/np.sum(w2)
                 f_sparsity = 0
 
-                # so for each observation this is the sum of all the difference between our selected feature and all other features
+                # so for each observation this is the sum of all the difference between it and all other observations
                 f_cls = [
                     np.sum(normalized_w2 * theta, axis=1)[..., None],
                     np.sum(normalized_w1 * ro, axis=1)[..., None]
@@ -162,15 +143,16 @@ class LocalFeatureSelection():
 
                 mask_excluded[j] = True # reset the mask
 
-                for k in range(self.n_beta):
+                for k in range(0, self.n_beta):
                     print("-", k)
                     beta = 1/self.n_beta * (k+1)
                     epsilon = beta * epsilon_max
                     A_ub_1 = np.vstack((np.ones((1, m_features)), -np.ones((1, m_features)), -b)) # BB TODO: Rename
                     b_ub_1 = np.vstack((self.alpha, -1, -epsilon)) # b1 TODO: Rename
                     # NOTE: These share names with the other ones, rename to be distinct
+                    
 
-                    linprog_res_1 = linprog(a.T, A_ub=A_ub_1, b_ub=b_ub_1, bounds=(0.0, 1.0), method='interior-point', options={ 'tol':0.000001, 'maxiter': 200})
+                    linprog_res_1 = linprog(a.T, A_ub=A_ub_1, b_ub=b_ub_1, callback=linprog_callback, bounds=(0.0, 1.0), method='interior-point', options={ 'tol':1e-6, 'maxiter': 200})
 
                     x = linprog_res_1.x
                     fun = linprog_res_1.fun
@@ -195,7 +177,7 @@ class LocalFeatureSelection():
                         for l in range(n_unq_observations):
                             unq_observations_slice = unq_observations[:, l]
                             rep_points_p = training_data[unq_observations_slice, :]
-                            if np.sum(A_ub_1 @ unq_observations_slice > b_ub_1[:, 0]) == 0:  # if atleast one feature is active and no more than maxNoFea
+                            if np.sum(A_ub_1 @ unq_observations_slice > b_ub_1[:, 0]) == 0:  # if atleast one feature is active and no more than maxNoFea [b_ub_1[:, 0] is alpha] 
                                 feasibility_temp[0, l] = 1
                                 distance_within [0, l] = a @ unq_observations_slice
                                 # distance_between [0, l] = b @ unq_observations_slice
@@ -216,6 +198,7 @@ class LocalFeatureSelection():
                                         ]
                                         n_cls_closest[matching_class] = n_cls_closest[matching_class] - 1 # we subtract 1 since we arnt including this point
                                         # check if there are more dissimilar features than similar features close by (proportional to the total number of each)
+                                        # this is relative proportions to the original data set
                                         if self.gamma * (n_cls_closest[matching_class]/(n_total_cls[matching_class]-1)) < (n_cls_closest[nonmatching_class]/n_total_cls[nonmatching_class]):
                                             distance_found = True
                                             if count_m == 0:
@@ -233,7 +216,7 @@ class LocalFeatureSelection():
                                             far[0, l] = 0
         
                                             for u in range(rep_points_p_slice.shape[1]):
-                                                dist_quasi_test = np.absolute(np.sqrt(np.sum((rep_points_p - rep_points_p_slice[:, u][...,None]) ** 2, axis=0)))
+                                                dist_quasi_test = np.absolute(np.sqrt(np.sum((rep_points_p - rep_points_p_slice[:, u][...,None]) ** 2, axis=0))) # distance from this point to all other points
                                                 dist_quasi_test_cls = rep_points_p_slice_labels[u]
                                                 min_uniq = np.sort(np.unique(dist_quasi_test))
                                                 count_n = 0
@@ -265,7 +248,6 @@ class LocalFeatureSelection():
                                                         far[0, l] = far[0, l] + 1
                                                     if dist_quasi_test_cls==0 and No_NN_C1<(No_NN_C2-1):
                                                         dr[0, l] = dr[0, l] + 1
-                                            print('hello')
                                         count_m = count_m + 1
                         eval_criteria = [
                             dr/n_total_cls[0]-far/n_total_cls[1],
@@ -280,7 +262,12 @@ class LocalFeatureSelection():
                         if feasibility[j, k] == 1:
                             tb_temp[:, j, k] = TT_binary
                             tr_temp[:, j, k] = linprog_res_1.x
-
+            b_ratio[feasibility == 0] = -np.inf
+            I1 = np.argmax(b_ratio, axis=1) # what column (observation) contains the largest value for each row (feature)
+            for j in range(n_observations):
+                self.fstar[:, j] = tb_temp[:, i, I1[j]] # what class is associated with the observation that has the largest value for this feature?
+                self.fstar_lin[:, j] = tr_temp[:, i, I1[j]]
+        print(self.fstar)
 
     def transform(self, training_data, training_labels, testing_data, testing_labels):
         self.classification_error = [None, None],       # classification error (in percent) associated to the input test points with class 0 and 1
@@ -338,6 +325,7 @@ testing_labels = mat['TestLables']
 
 lfs = LocalFeatureSelection()
 lfs.fit(training_data, training_labels)
+print(lfs.fstar)
 
 # if targets(1,y)==1
 # if targets(1,Q(u))==1 && (No_NN_C1-1)>No_NN_C2
