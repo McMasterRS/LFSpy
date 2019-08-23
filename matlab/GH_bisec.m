@@ -73,13 +73,13 @@ for i=1:N
     w=weight(:,i);
     if cls1==1
         for n=1:Ncls1
-            f_cls1_temp=f_cls1_temp+w(n).*ro(:,n);
+            f_cls1_temp=f_cls1_temp+w(n).*ro(:,n); % sum the difference of all class 1 observations and adjust by our weight of that feature 
         end
         for n=1:Ncls2
             f_cls2_temp=f_cls2_temp+w(n+Ncls1).*theta(:,n);
         end
         f_Sparsity=w(end).*ones(M,1);
-        f_temp=f_Sparsity+f_cls2_temp;
+        f_temp=f_Sparsity+f_cls2_temp; % f_temp is the feature difference, adjusted by weight
         b(i,:)=f_temp'./Ncls2;
         a(i,:)=f_cls1_temp'./Ncls1;
     end

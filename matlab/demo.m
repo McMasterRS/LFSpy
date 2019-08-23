@@ -29,7 +29,7 @@ clear; clc;
 load('Data');
 Para.alpha=19; 
 Para.gamma=0.2;
-Para.tau=2;
+Para.tau=1;
 Para.sigma=1;
 Para.NBeta=20;
 Para.NRRP=2000;

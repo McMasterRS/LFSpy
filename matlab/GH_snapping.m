@@ -19,6 +19,7 @@ disp(No_unq);
 for y=1:No_unq
     TT_binary_temp(A_unique(:,y))=1;
     TT_binary_temp(not(A_unique(:,y)))=0;
+    v = BB(1:end,:)*TT_binary_temp
     if sum(BB(1:end,:)*TT_binary_temp>b1(1:end))==0 % if atleast one feature is active and no more than maxNoFea
         feasib(1,y)=1;
         wit_dist(y)=a*TT_binary_temp;

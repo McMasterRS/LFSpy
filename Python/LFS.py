@@ -21,6 +21,7 @@ from fn.accuracy import accuracy
 
 WANDERING = 0
 
+random_numbers = loadmat('./data/r')['r']
 
 ###########################################
 # Local Feature Selection
@@ -42,232 +43,7 @@ class LocalFeatureSelection():
 
     # (160 ways to describe this thing, 100 times we observed it, and two ways it can be (0 or 1)) 
     def fit(self, training_data, training_labels):
-
-        self.fstar = np.zeros(training_data.shape)          # selected features for each representative point; if fstar(i, j) = 1, ith feature is selected for jth representative point.
-        self.fstar_lin = np.zeros(training_data.shape)      # fstar before applying randomized rounding process
-        m_features, n_observations = training_data.shape    # (M, N) M number of candidate features, N observations (160x100)
-        n_total_cls = [
-            np.sum(training_labels^1),                 # the total number of class 0 we observed
-            np.sum(training_labels)                    # the total number of class 1 we observed
-        ]
-
-        random_numbers = loadmat('./data/r')['r']
-        tb_temp = np.zeros((m_features, n_observations, self.n_beta))
-        tr_temp = np.zeros((m_features, n_observations, self.n_beta))
-
-        for i in range(self.tau):
-
-            feasibility = np.zeros((n_observations, self.n_beta)) # Whether this was feasible of not
-            radious = np.zeros((n_observations, self.n_beta)) # radious is the distance needed from each point, to find something
-            b_ratio = np.zeros((n_observations, self.n_beta)) # B ratio?
-
-            n_remaining_cls = [0, 0]
-
-            # Calculate fstar for each observation
-            mask_excluded = np.ones(n_observations, dtype=bool)
-            without_observation = np.ones(n_observations, dtype=bool)
-
-            # I forget to clean something up, so its wrong answers for every run but the first
-            for j in range(0, n_observations): # temporarily set to 2, change back to 0 in production
-                mask_excluded[j] = False # Mask out the j'th observation
-                
-                data_observation = training_data[:, j][..., None] # data for this observation
-                matching_class = training_labels[0, j] # class for this observation
-                nonmatching_class = matching_class^1 # Binary XOR inversion of the active class (0->1, 1->0)
-
-                labels_excluded = training_labels[0, mask_excluded].astype(bool) # this is all labels excluding the j'th
-                data_excluded = training_data[:, mask_excluded]
-
-                n_remaining_cls[matching_class] = n_total_cls[matching_class] - 1 # How many of the same class did we see, excluding this observation
-                n_remaining_cls[nonmatching_class] = n_total_cls[nonmatching_class]
-
-                # how similar is this feature from all other features? delta between 
-                theta = (-data_excluded[:, ~labels_excluded] + data_observation)**2    # How close is this observation from all other observations of class 0?
-                ro = (-data_excluded[:, labels_excluded] + data_observation)**2        # How close is this observation from all other observations of class 1?
-
-                observation_delta = [
-                    (-data_excluded[:, ~labels_excluded] + training_data[:, j][..., None])**2, # (theta) How similar is this observation to all other observations of class 0
-                    (-data_excluded[:, labels_excluded] + training_data[:, j][..., None])**2   # (ro)   How similar is this observation to all other observations of class 1
-                ]
-
-                weight_matrix = np.zeros((n_observations, n_observations)) # distance matrix for i'th feature
-                # calcualt
-                for k in range(n_observations):
-                    dist_ro = np.sqrt(np.sum(self.fstar[:, j][..., None]*observation_delta[1], axis=0))
-                    dist_alpha = np.sqrt(np.sum(self.fstar[:, j][..., None]*observation_delta[0], axis=0))
-                    weight_matrix[k, mask_excluded] = np.concatenate(( 
-                        np.exp(-dist_ro - np.min(dist_ro) ** 2 / self.alpha),
-                        np.exp(-dist_alpha - np.min(dist_alpha) ** 2 / self.alpha)
-                    )) 
-
-                # what is the average difference.
-                average_weight = np.mean(weight_matrix, axis=0)[mask_excluded]
-                w1 = average_weight[:n_remaining_cls[1]] # I think this is the average weight for all class 1
-                w2 = average_weight[n_remaining_cls[1]:] # i think this is the average weight for all class 2
-                normalized_w1 = w1/np.sum(w1)
-                normalized_w2 = w2/np.sum(w2)
-                # apply random wandering
-                w1 = (1-WANDERING) * normalized_w1 + WANDERING * np.random.rand(1, w1.shape[0]) # Oh shit, hidden rand! I think with random wandering at 0, this just equals normalized weights
-                w2 = (1-WANDERING) * normalized_w2 + WANDERING * np.random.rand(1, w2.shape[0]) # Oh shit, hidden rand!
-                # renormalize
-                normalized_w1 = w1/np.sum(w1)
-                normalized_w2 = w2/np.sum(w2)
-                f_sparsity = 0
-
-                # so for each observation this is the sum of all the difference between it and all other observations
-                f_cls = [
-                    np.sum(normalized_w2 * theta, axis=1)[..., None],
-                    np.sum(normalized_w1 * ro, axis=1)[..., None]
-                ]
-
-                # in some cases this leans one way or the other, we want to find the smallest delta, we are finding the minimum  
-                A_ub_0 = np.concatenate((np.ones((1, m_features)), -np.ones((1, m_features))), axis=0) # The inequality constraint matrix. Each row of A_ub specifies the coefficients of a linear inequality constraint on x.
-                b_ub_0 = np.array([[self.alpha], [-1]]) # The inequality constraint vector. Each element represents an upper bound on the corresponding value of A_ub @ x.
-
-                a = f_cls[matching_class].T / n_remaining_cls[matching_class]
-                b = (f_sparsity + f_cls[nonmatching_class]).T / n_remaining_cls[nonmatching_class] # Coefficients of the linear objective function to be minimized.                
-                linprog_res_0 = linprog(-b.T, A_ub=A_ub_0, b_ub=b_ub_0, bounds=(0, 1), method='interior-point', options={'tol':0.000001, 'maxiter': 200})
-
-                x = linprog_res_0.x
-                fun = linprog_res_0.fun
-                slack = linprog_res_0.slack
-                con = linprog_res_0.con
-                success = linprog_res_0.success
-                status = linprog_res_0.status
-                nit = linprog_res_0.nit
-                message = linprog_res_0.message
-
-
-                if linprog_res_0.success:
-                    epsilon_max = -linprog_res_0.fun
-
-                mask_excluded[j] = True # reset the mask
-
-                for k in range(0, self.n_beta):
-                    print("-", k)
-                    beta = 1/self.n_beta * (k+1)
-                    epsilon = beta * epsilon_max
-                    A_ub_1 = np.vstack((np.ones((1, m_features)), -np.ones((1, m_features)), -b)) # BB TODO: Rename
-                    b_ub_1 = np.vstack((self.alpha, -1, -epsilon)) # b1 TODO: Rename
-                    # NOTE: These share names with the other ones, rename to be distinct
-                    
-
-                    linprog_res_1 = linprog(a.T, A_ub=A_ub_1, b_ub=b_ub_1, callback=linprog_callback, bounds=(0.0, 1.0), method='interior-point', options={ 'tol':1e-6, 'maxiter': 200})
-
-                    x = linprog_res_1.x
-                    fun = linprog_res_1.fun
-                    slack = linprog_res_1.slack
-                    con = linprog_res_1.con
-                    success = linprog_res_1.success
-                    status = linprog_res_1.status
-                    nit = linprog_res_1.nit
-                    message = linprog_res_1.message
-
-                    if linprog_res_1.success:
-                        A = random_numbers <= linprog_res_1.x[..., None]
-                        unq_observations = np.unique(A.T, axis=0).T # we only care about unique observations, that is if two are the same, we dont want to iterate over them
-                        n_unq_observations = unq_observations.shape[1]
-                        feasibility_temp = np.zeros((1, n_unq_observations))
-                        radious_temp = np.zeros((1, n_unq_observations))
-                        distance_within = np.inf * np.ones((1, n_unq_observations))
-                        # distance_between = -np.inf * np.ones((1, n_unq_observations))
-                        dr = np.zeros((1, n_unq_observations))
-                        far = np.zeros((1, n_unq_observations))
-
-                        for l in range(n_unq_observations):
-                            unq_observations_slice = unq_observations[:, l]
-                            rep_points_p = training_data[unq_observations_slice, :]
-                            if np.sum(A_ub_1 @ unq_observations_slice > b_ub_1[:, 0]) == 0:  # if atleast one feature is active and no more than maxNoFea [b_ub_1[:, 0] is alpha] 
-                                feasibility_temp[0, l] = 1
-                                distance_within [0, l] = a @ unq_observations_slice
-                                # distance_between [0, l] = b @ unq_observations_slice
-                                if np.sum(unq_observations_slice^1) < m_features:
-                                    dist_rep = np.abs(np.sqrt(np.sum((-rep_points_p + rep_points_p[:, j][..., None]) ** 2, 0)))
-                                    unq_dist_rep = np.msort(np.unique(dist_rep)) # a sorted list of all unique distances from representative points
-                                    n_cls_closest = []
-                                    n_cls_count = [0, 0]
-                                    count_m = 0
-                                    distance_found = False
-
-                                    # Increase the distance until we have more dissimilar observations than similar observations
-                                    while not distance_found:
-                                        within_zone = (dist_rep <= unq_dist_rep[count_m]) # which observations are at this distance?
-                                        n_cls_closest = [
-                                            np.sum((training_labels^1)[0, within_zone]), # the number of 0's within the zone
-                                            np.sum(training_labels[0, within_zone]) # the number of 1's within the zone
-                                        ]
-                                        n_cls_closest[matching_class] = n_cls_closest[matching_class] - 1 # we subtract 1 since we arnt including this point
-                                        # check if there are more dissimilar features than similar features close by (proportional to the total number of each)
-                                        # this is relative proportions to the original data set
-                                        if self.gamma * (n_cls_closest[matching_class]/(n_total_cls[matching_class]-1)) < (n_cls_closest[nonmatching_class]/n_total_cls[nonmatching_class]):
-                                            distance_found = True
-                                            if count_m == 0:
-                                                radious_temp[0, l] = unq_dist_rep[0] # this is the radious of how far we need to go for this
-                                            else:
-                                                radious_temp[0, l] = 0.5 * (unq_dist_rep[count_m-1] + unq_dist_rep[count_m]) # this is the radious of how far we need to go for this
-                                                n_cls_count[matching_class] = n_cls_count[matching_class] + 1
-                                            if radious_temp[0, l] == 0: # if the radious is less 0, that is if the point is right on top of it, then pad it a bit
-                                                radious_temp[0, l] = 0.000001
-
-                                            within_zone = (dist_rep <= radious_temp[0, l]) # how many are within the zone
-                                            rep_points_p_slice = rep_points_p[:, (within_zone == 1)] # these are which points are within the zone
-                                            rep_points_p_slice_labels = training_labels[0, (within_zone == 1)]
-                                            dr[0, l] = 0
-                                            far[0, l] = 0
-        
-                                            for u in range(rep_points_p_slice.shape[1]):
-                                                dist_quasi_test = np.absolute(np.sqrt(np.sum((rep_points_p - rep_points_p_slice[:, u][...,None]) ** 2, axis=0))) # distance from this point to all other points
-                                                dist_quasi_test_cls = rep_points_p_slice_labels[u]
-                                                min_uniq = np.sort(np.unique(dist_quasi_test))
-                                                count_n = 0
-                                                total_nearest_neighbours = 0
-                                                #  Searches until it finds k nearest neighbours
-                                                while total_nearest_neighbours < self.knn+1:
-                                                    nearest_neighbours = dist_quasi_test <= min_uniq[count_n] # from smallest to largest, tries to find k nearest neighbours
-                                                    total_nearest_neighbours = np.sum(nearest_neighbours)
-                                                    count_n = count_n + 1
-                                                n_nearest_neighbours = [np.sum(nearest_neighbours & (training_labels^1)), np.sum(nearest_neighbours & training_labels)] # number of nearest neighbours
-                                                # n_nearest_neighbours[dist_quasi_test_cls] = n_nearest_neighbours[dist_quasi_test_cls] - 1
-                                                # if there are more nearest neighbours of the class that quasi_test is, then increase dr
-                                                # if dist_quasi_test_cls == 0 and n_nearest_neighbours[1] < (n_nearest_neighbours[0] - 1):
-                                                #     dr[0, l] = dr[0, l] + 1
-                                                # # if there are more nearest neighbours of the class that quasi_test is, then increase dr
-                                                # elif dist_quasi_test_cls == 1 and (n_nearest_neighbours[1]-1) > n_nearest_neighbours[0]:
-                                                #     far[0, l] = far[0, l] + 1
-
-                                                No_NN_C1 = n_nearest_neighbours[1]
-                                                No_NN_C2 = n_nearest_neighbours[0]
-                                                if matching_class==1:
-                                                    if dist_quasi_test_cls==1 and (No_NN_C1-1)>No_NN_C2:
-                                                        dr[0, l] = dr[0, l] + 1
-                                                    if dist_quasi_test_cls==0 and No_NN_C1>(No_NN_C2-1):
-                                                        far[0, l] = far[0, l] + 1
-
-                                                if matching_class==0:
-                                                    if dist_quasi_test_cls==1 and (No_NN_C1-1)<No_NN_C2:
-                                                        far[0, l] = far[0, l] + 1
-                                                    if dist_quasi_test_cls==0 and No_NN_C1<(No_NN_C2-1):
-                                                        dr[0, l] = dr[0, l] + 1
-                                        count_m = count_m + 1
-                        eval_criteria = [
-                            dr/n_total_cls[0]-far/n_total_cls[1],
-                            dr/n_total_cls[1]-far/n_total_cls[0]
-                        ]
-                        i_lowest_distance_within = np.argmin(distance_within) # find the shortest within distance
-                        TT_binary = unq_observations[:, i_lowest_distance_within]
-                        feasibility[j, k] = feasibility_temp[0, i_lowest_distance_within]
-                        radious[j, k] = radious_temp[0, i_lowest_distance_within]
-                        b_ratio[j, k] = eval_criteria[training_labels[0, j]][0, i_lowest_distance_within]
-
-                        if feasibility[j, k] == 1:
-                            tb_temp[:, j, k] = TT_binary
-                            tr_temp[:, j, k] = linprog_res_1.x
-            b_ratio[feasibility == 0] = -np.inf
-            I1 = np.argmax(b_ratio, axis=1) # what column (observation) contains the largest value for each row (feature)
-            for j in range(n_observations):
-                self.fstar[:, j] = tb_temp[:, i, I1[j]] # what class is associated with the observation that has the largest value for this feature?
-                self.fstar_lin[:, j] = tr_temp[:, i, I1[j]]
-        print(self.fstar)
+        pass
 
     def transform(self, training_data, training_labels, testing_data, testing_labels):
         self.classification_error = [None, None],       # classification error (in percent) associated to the input test points with class 0 and 1
@@ -276,45 +52,421 @@ class LocalFeatureSelection():
     def fit_transform(self, training_data, training_labels, testing_data, testing_labels):
         pass
 
-    def run(self, training_data, training_labels, testing_data, testing_labels):
+    # FES might be feature estimation!
+    def fit(self, training_data, training_labels, test_data, test_labels):
 
-        training_labels = training_labels.astype(bool)
+        self.fstar = np.zeros(training_data.shape)          # selected features for each representative point; if fstar(i, j) = 1, ith feature is selected for jth representative point.
+        self.fstar_lin = np.zeros(training_data.shape)      # fstar before applying randomized rounding process
 
-        self.training_data = training_data                  # (M, N) M is number of candidate fetatures, N is an observation; 
-        self.testing_data = testing_data                    # (M, K) M is number of candidate features; K is number of test points.
+        m_features, n_observations = training_data.shape    # (M, N) M number of candidate features, N observations (160x100)
+        n_total_cls = [np.sum(training_labels^1), np.sum(training_labels)] # Total number of each class in our training data
+        training_labels = training_labels[0] # I want this as a 1 dimensional array so I can use it as a mask throughout
 
-        self.training_labels = training_labels.astype(bool) # class label = {0,1}
-        self.testing_labels = testing_labels                # class label = {0, 1}
+        overall_feasibility = np.zeros((n_observations, self.n_beta)) # Whether this was feasible of not
+        overall_radious = np.zeros((n_observations, self.n_beta)) # radious is the distance needed from each point, to find something
+        overall_b_ratio = np.zeros((n_observations, self.n_beta)) # B ratio?
+        tb_temp = np.zeros((m_features, n_observations, self.n_beta))
+        tr_temp = np.zeros((m_features, n_observations, self.n_beta))
 
-        self.results = {
-            'fstar': np.zeros(training_data.shape),     # selected features for each representative point; if fstar(i, j)=1, ith feature is selected for jth representative point.
-            'fstar_lin': np.zeros(training_data.shape), # fstar before applying randomized rounding process
-            'classification_error': [None, None],       # classification error (in percent) associated to the input test points with class 0 and 1
-            'total_classification_error': None          # total error (in percent) for the entire input test points.
-        }
+        # For each observation, we calculate an fstar value for each feature
+        # for i_observation, selected_observation in enumerate(training_data.T, start=0):
+        for z in range(self.tau):
+            for i_observation in range(0, n_observations): # Leave one out class testing
 
-        M, N = training_data.shape
-        fstar = np.zeros((M, N))
-        fstar_lin = np.zeros((M, N))
+                selected_observation = training_data[:, i_observation][..., None]
+                selected_label = training_labels[i_observation]
+                matching_label = selected_label
+                nonmatching_label = selected_label^1
 
-        for i in range(self.tau):
-            a, b, epsilon_max = fes(training_data, training_labels, fstar, params)
-            t_binary_temp, t_r_temp, b_ratio, feasibility, radious = evaluation(training_data, training_labels, a, b, epsilon_max, params)
-            b_ratio[feasibility == 0] = -np.inf
-            I1 = np.argmax(b_ratio, axis=1)
-            for j in range(N):
-                fstar[:, i] = t_binary_temp[:, i, I1[i]]
-                fstar_lin[:, i] = t_r_temp[:, i, I1[i]]
+                not_selected_obs = np.ones((1, n_observations), dtype=bool)[0] # mask for all observations not at i
+                not_selected_obs[i_observation] = False # deselect the i'th observations
+                excluding_selected = not_selected_obs
 
-        s_class_1, s_class_2 = classification(training_data, training_labels, N, testing_data, fstar, params) # DONE
-        classification_error_0, classification_error_1, total_classification_error = accuracy(s_class_1, s_class_2, test_labels) # DONE
+                excluded_observations = training_data[:, not_selected_obs] # get all observations not at i
+                excluded_labels = training_labels[not_selected_obs] # get the labels not at i, (convert to bool so we can use it as a mask)
+                n_excluded_class = [np.sum(excluded_labels^1), np.sum(excluded_labels)]
 
-        self.fstar = fstar
-        self.fstar_lin = fstar_lin
-        self.classification_error = [classification_error_0, classification_error_1]
-        self.total_classification_error = total_classification_error
+                # basically, if we already suspect the class for each feature from previous iterations, we bump it in that direction
+                fstar_mask = self.fstar[:, i_observation].astype(bool) # fstar is binary if a feature is relevent for this observations
 
-###########################################
+                # Calculate the difference between this obseration and all other observations
+                observation_deltas = (training_data - selected_observation)**2
+                # Possibly logistic regression weights?
+                # Calculate a weight for each observation based on if we've previously found fstar values for its features
+                fstar_observation_deltas = (np.sqrt(np.sum(observation_deltas[fstar_mask, :], axis=0))) # total similarity along features selected by fstar
+                observation_weight = np.zeros((n_observations, n_observations))
+                observation_weight[:, training_labels == 0] = np.exp((-(fstar_observation_deltas[training_labels == 0] - np.min(fstar_observation_deltas[training_labels == 0]))**2)/self.sigma)
+                observation_weight[:, training_labels == 1] = np.exp((-(fstar_observation_deltas[training_labels == 1] - np.min(fstar_observation_deltas[training_labels == 1]))**2)/self.sigma)
+                observation_weight[:, i_observation] = 0
+                average_observation_weight = np.mean(observation_weight, axis=0) # mean weight of all observations
+                normalized_weight = np.zeros((1, n_observations)) # normalized weight for all observations not including the current observation
+                normalized_weight[:, training_labels == 0] = np.round(average_observation_weight[training_labels == 0]/np.sum(average_observation_weight[training_labels == 0]), decimals=16)
+                normalized_weight[:, training_labels == 1] = np.round(average_observation_weight[training_labels == 1]/np.sum(average_observation_weight[training_labels == 1]), decimals=16)
+
+                # Find the average weighted difference for each feature
+                average_feature_deltas = [0, 0]
+                average_feature_deltas[matching_label] = np.round(np.sum(normalized_weight[0, excluding_selected & (training_labels == matching_label)] * observation_deltas[:, excluding_selected & (training_labels == matching_label)], axis=1) / (n_total_cls[matching_label]-1), decimals=16)
+                average_feature_deltas[nonmatching_label] = np.sum(normalized_weight[0, excluding_selected & (training_labels == nonmatching_label)] * observation_deltas[:, excluding_selected & (training_labels == nonmatching_label)], axis=1)/n_total_cls[nonmatching_label]
+
+                # 
+                A_ub_0 = np.concatenate((np.ones((1, m_features)), -np.ones((1, m_features))), axis=0) # The inequality constraint matrix. Each row of A_ub specifies the coefficients of a linear inequality constraint on x.
+                b_ub_0 = np.array([[self.alpha], [-1]]) # The inequality constraint vector. Each element represents an upper bound on the corresponding value of A_ub @ x.
+
+                linprog_res_0 = linprog(-average_feature_deltas[nonmatching_label], A_ub=A_ub_0, b_ub=b_ub_0, bounds=(0, 1), method='interior-point', options={'tol':0.000001, 'maxiter': 200})             # This is secretly a maximization function
+
+                if linprog_res_0.success:
+                    epsilon_max = -linprog_res_0.fun
+
+                    for i_beta in range(0, self.n_beta): # beta is kind of the granularity or resolution, higher = better estimation?
+                        beta = np.round(1/self.n_beta * (i_beta + 1), decimals=15)
+                        epsilon = beta * epsilon_max
+
+                        A_ub_1 = np.vstack((np.ones((1, m_features)), -np.ones((1, m_features)), -average_feature_deltas[nonmatching_label])) # BB TODO: Rename
+                        b_ub_1 = np.vstack((self.alpha, -1, -epsilon)) # b1 TODO: Rename
+
+                        # linprog_res_1.x is our best estimate for which class is associated with what feature.
+                        linprog_res_1 = linprog(average_feature_deltas[matching_label], A_ub=A_ub_1, b_ub=b_ub_1, callback=linprog_callback, bounds=(0.0, 1.0), method='interior-point', options={ 'tol':1e-6, 'maxiter': 200})
+
+                        class_estimations = linprog_res_1.x[..., None]
+
+    ###################################################################################################
+    ###################################################################################################
+
+                        if linprog_res_1.success:
+                            # Random rounding, for each of our estimates that are close to 0.5 (were in the middle of what class it should be)
+                            # basically this tries to find where we could use more accuracy, then tries all options, and revaluates to see if we did better
+                            
+                            requires_adjustment = random_numbers <= class_estimations # compare our class estimations against random numbers, where our results are close to 0.5 we will get true, otherwise False
+                            unique_options = np.unique(requires_adjustment, axis=1) # this will result in all probable options for what our less certain features can be
+                            n_options = unique_options.shape[1]
+
+                            option_feasabilities = np.zeros((1, n_options))[0] # not all options are feasible, this is adjusted as feasible options are found
+                            option_radiuses = np.zeros((1, n_options))[0]
+                            option_delta_within = np.inf * np.ones((1, n_options))[0]
+
+                            dr = np.zeros((1, n_options))
+                            far = np.zeros((1, n_options))
+
+                            # Each option is a probable case for which features could be further classified. We try each option, and find the one that best fits
+                            for i_option, option in enumerate(unique_options.T): # For each probable option
+                                if np.sum(A_ub_1 @ option > b_ub_1[:, 0]) == 0:  # if atleast one feature is active and no more than maxNoFeatures
+                                    if np.sum(option) > 0: # If there is atleast one relevant feature in this option
+
+                                        option_feasabilities[i_option] = 1 # this is a feasible option if the above criteria is fulfilled
+                                        representative_points = training_data[option, :] # Each feature that has been selected in this option
+                                        option_delta_within[i_option] = average_feature_deltas[matching_label] @ option  # get our previously calculated feature delta for the selected features
+                                        active_point = representative_points[:, i_observation][..., None]
+                                        rep_deltas = np.abs(np.sqrt(np.sum((-representative_points + active_point) ** 2, 0))) # We get the difference between this active point and all other rep points
+                                        unique_deltas = np.msort(np.unique(rep_deltas)) # we filter out all duplicate deltas and sort in ascending order in order to find the smallest delta
+
+                                        # Increase the difference threshold until we have more dissimilar observations than similar observations
+                                        for i_delta, delta in enumerate(unique_deltas, start=0):
+
+                                            radious = delta
+                                            observations_within_delta = (rep_deltas <= delta) # find all representative points that are atleast delta different
+                                            n_cls_within = [
+                                                np.sum((training_labels^1)[observations_within_delta]),   # the number of 0's that fall within this difference threshold
+                                                np.sum(training_labels[observations_within_delta])        # the number of 1's within the zone
+                                            ]
+                                            n_cls_within[selected_label] = n_cls_within[selected_label] - 1     # we subtract 1 since we arnt including our selected point
+                                            # We want there to be less of our similar class proportionally at this delta than our dissimilar class
+                                            if self.gamma * (n_cls_within[selected_label]/(n_total_cls[selected_label]-1)) < (n_cls_within[selected_label^1]/n_total_cls[selected_label^1]):
+                                                if i_delta > 0:
+                                                    radious = 0.5 * (radious + unique_deltas[i_delta-1]) # this is the radious of how far we need to go for this
+                                                    n_cls_within[selected_label] = n_cls_within[selected_label] + 1 # increment the cound of how many classes are within this radious
+
+                                                if radious == 0: # if the radious is 0, that is probably if the point is right on top of it, then pad it a bit
+                                                    radious = 0.000001
+
+                                                observations_within_radious = (rep_deltas <= radious) # how many are within the zone
+                                                rep_points_within_radious = representative_points[:, (observations_within_radious == 1)] # these are which points are within the zone
+                                                classes_within_radious = training_labels[observations_within_radious == 1]
+                                                dr[0, i_option] = 0
+                                                far[0, i_option] = 0
+
+                                                for i_point, rep_point_within in enumerate(rep_points_within_radious.T):
+                                                    rep_point_within = rep_point_within[..., None]
+                                                    dist_quasi_test = np.absolute(np.sqrt(np.sum((representative_points - rep_point_within) ** 2, axis=0))) # delta between this point and all other points
+                                                    dist_quasi_test_cls = classes_within_radious[i_point]
+                                                    min_uniq = np.sort(np.unique(dist_quasi_test)) # we once again sort the features by ascending difference
+                                                    total_nearest_neighbours = 0
+                                                    #  Searches until it finds k nearest neighbours
+                                                    for i_delta_within, delta_within in enumerate(min_uniq):
+                                                        nearest_neighbours = dist_quasi_test <= min_uniq[i_delta_within] # from smallest to largest, tries to find k nearest neighbours
+                                                        total_nearest_neighbours = np.sum(nearest_neighbours)
+                                                        if(total_nearest_neighbours > self.knn):
+                                                            break
+
+                                                    n_nearest_neighbours = [  # number of nearest neighbours of each class
+                                                        np.sum(nearest_neighbours & (training_labels^1)),
+                                                        np.sum(nearest_neighbours & training_labels)
+                                                    ]
+
+                                                    # The case where the this point's class is in the majority amongst neighbouring points in the localized radious
+                                                    if dist_quasi_test_cls == selected_label and (n_nearest_neighbours[selected_label] - 1) > n_nearest_neighbours[selected_label^1]:
+                                                        dr[0, i_option] = dr[0, i_option] + 1 # Count the number of points that are in the majority
+
+                                                    # The case where the this point's class is in the minority amongst neighbouring points in the localized radious, that is there are more dissimilar points within the radious
+                                                    if dist_quasi_test_cls == (selected_label^1) and n_nearest_neighbours[selected_label] > (n_nearest_neighbours[selected_label^1]-1):
+                                                        far[0, i_option] = far[0, i_option] +1 # count the number of times points are in the minority
+                                                break
+
+                            eval_criteria = [
+                                dr/n_total_cls[0] - far/n_total_cls[1], # we get the difference between the proportion of similar to dissimilar neighbouring points within the radious
+                                dr/n_total_cls[1] - far/n_total_cls[0]
+                            ]
+                            i_lowest_distance_within = np.argmin(option_delta_within) # find the shortest within distance
+                            TT_binary = unique_options[:, i_lowest_distance_within]
+                            overall_feasibility[i_observation, i_beta] = option_feasabilities[i_lowest_distance_within]
+                            overall_radious[i_observation, i_beta] = option_radiuses[i_lowest_distance_within]
+                            overall_b_ratio[i_observation, i_beta] = eval_criteria[training_labels[i_observation]][0, i_lowest_distance_within]
+                            # if overall_b_ratio[i_observation, i_beta] != _bratio[i_observation, i_beta]:
+                            #     for i in range(160):
+                            #         print(_TT[i_observation, i_beta, i], class_estimations[i, 0])
+                            #     print('oops')
+                            if overall_feasibility[i_observation, i_beta] == 1:
+                                tb_temp[:, i_observation, i_beta] = TT_binary
+                                tr_temp[:, i_observation, i_beta] = linprog_res_1.x
+
+                bratio = overall_b_ratio
+                overall_b_ratio[overall_feasibility == 0] = -np.inf
+                I1 = np.argmax(overall_b_ratio, axis=1) # what column (observation) contains the largest value for each row (feature)
+
+                for j in range(n_observations):
+                    self.fstar[:, j] = tb_temp[:, i_observation, I1[j]] # what class is associated with the observation that has the largest value for this feature?
+                    self.fstar_lin[:, j] = tr_temp[:, i_observation, I1[j]]
+            print('done')
+
+        SClass1,SClass2 = self.classification(training_data, training_labels, 100, test_data, self.fstar, self.gamma, self.knn)
+        ErCls1, ErCls2, ErClassification = self.accuracy(SClass1, SClass2, test_labels)
+        print(ErCls1, ErCls2, ErClassification)
+
+    def classification(self, patterns, targets, N, test, fstar, gamma, knn):
+        """ """
+
+        H = test.shape[1]
+        s_class_1_sphere_knn = np.zeros((1, H))
+        s_class_2_sphere_knn = np.zeros((1, H))
+
+        for t in range(H) :
+            s_class_1_sphere_knn[0, t], s_class_2_sphere_knn[0, t], _ = self.class_sim_m(test[:, t], N, patterns, targets, fstar, gamma, knn)
+
+        return [s_class_1_sphere_knn, s_class_2_sphere_knn]
+
+    def class_sim_m(self, test, N, patterns, targets, fstar, gamma, knn):
+        
+        targets = targets[None, ...]
+
+        n_nt_cls_l = np.sum(targets) # count the number of targets
+        n_nt_cls_2 = N-n_nt_cls_l # fidn the remaining somethings
+        M = patterns.shape[0] 
+        NC1 = 0
+        NC2 = 0
+        S = np.Inf * np.ones((1, N))
+
+        NoNNC1knn = np.zeros((1,N))
+        NoNNC2knn = np.zeros((1,N))
+        NoNNC1 = np.zeros((1,N))
+        NoNNC2 = np.zeros((1,N))
+        radious = np.zeros((1,N))
+        for i in range(N) :
+            
+            XpatternsPr = patterns*fstar[:, i][...,None]
+            testPr = test*fstar[:, i]
+            Dist = np.abs(np.sqrt(np.sum((-testPr[...,None] + XpatternsPr)**2,0)))
+            # Dist = np.abs(np.sqrt(np.sum((XpatternsPr-testPr[..., None])**2,1)))
+            min1 = np.msort(Dist)
+            
+            min_Uniq = np.unique(min1)
+            m = -1
+            No_nereser = 0
+            while No_nereser<knn:
+                m = m+1
+                a1 = min_Uniq[m]
+                NN = Dist <= a1
+                No_nereser = np.sum(NN)
+            NoNNC1knn[0, i] = np.sum(NN & targets)
+            NoNNC2knn[0, i] = np.sum(NN & ~targets)
+            
+            A = np.where(fstar[:,i] == 0)
+            if A[0].shape[0] <M:
+                a_mask = np.ones(patterns.shape[0], dtype=bool)
+                a_mask[A] = False
+                patterns_P = patterns[a_mask]
+                test_P = test[a_mask]
+                # test_P[A,:] = []
+                testA = patterns_P[:,i] - test_P
+                Dist_test = np.abs(
+                    np.sqrt(
+                        np.sum(
+                            (patterns_P[:,i]-test_P)**2
+                        ,0)
+                    )
+                )
+                Dist_pat = np.abs(
+                    np.sqrt(
+                        np.sum(
+                            (patterns_P-patterns_P[:, i][..., None])**2
+                        ,0)
+                    )
+                )
+                EE_Rep = np.msort(Dist_pat)
+                remove = 0
+                if targets[0, i] == 1:
+                    UNQ = np.unique(EE_Rep)
+                    k = -1
+                    NC1 = NC1+1
+                    if remove !=  1:
+                        Next = 1
+                        while Next == 1:
+                            k = k+1
+                            r = UNQ[k]
+                            F1 = (Dist_pat == r)
+                            NoCls1r = np.sum(F1 & targets)
+                            NoCls2r = np.sum(F1 & ~targets)
+                            F2 = (Dist_pat <= r)
+                            NoCls1clst = np.sum(F2 & targets)-1
+                            NoCls2clst = np.sum(F2 & ~targets)
+                            if gamma*(NoCls1clst/(n_nt_cls_l-1))<(NoCls2clst/n_nt_cls_2):
+                                Next = 0
+                                if (k-1) == 0:
+                                    r = UNQ[k]
+                                else:
+                                    r = 0.5*(UNQ[k-1]+UNQ[k])
+                                
+                                if r == 0:
+                                    r = 10**-6
+                                
+                                r = 1*r
+                                F2 = (Dist_pat <= r)
+                                NoCls1clst = np.sum(F2 & targets)-1
+                                NoCls2clst = np.sum(F2 & ~targets)
+                        if Dist_test <= r:
+                            patterns_P = patterns*fstar[:,i][...,None]
+                            test_P = test*fstar[:,i]
+                            Dist = np.abs(
+                                np.sqrt(
+                                    np.sum(
+                                        (patterns_P-test_P[...,None])**2,0
+                                        )))
+                            min1 = np.msort(Dist)
+                            min_Uniq = np.unique(min1)
+                            m = -1
+                            No_nereser = 0
+                            while No_nereser<knn:
+                                m = m+1
+                                a1 = min_Uniq[m]
+                                NN = Dist <= a1
+                                No_nereser = np.sum(NN)
+                            
+                            NoNNC1[0,i] = np.sum(NN & targets)
+                            NoNNC2[0,i] = np.sum(NN & ~targets)
+                            if NoNNC1[0,i]>NoNNC2[0,i]:
+                                S[0,i] = 1
+                                
+                if targets[0,i] == 0:
+                    UNQ = np.unique(EE_Rep)
+                    k = -1
+                    NC2 = NC2+1
+                    if remove !=  1:
+                        Next = 1
+                        while Next == 1:
+                            k = k+1
+                            r = UNQ[k]
+                            F1 = (Dist_pat == r)
+                            NoCls1r = np.sum(F1 & targets)
+                            NoCls2r = np.sum(F1 & ~targets)
+                            F2 = (Dist_pat <= r)
+                            NoCls1clst = np.sum(F2 & targets)
+                            NoCls2clst = np.sum(F2 & ~targets)-1
+                            if  gamma*(NoCls2clst/(n_nt_cls_2-1))<(NoCls1clst/n_nt_cls_l):
+                                Next = 0
+                                if (k-1) == 0:
+                                    r = UNQ[k]
+                                else:
+                                    r = 0.5*(UNQ[k-1]+UNQ[k])
+                                
+                                if r == 0:
+                                    r = 10**-6
+                                
+                                r = 1*r
+                                F2 = (Dist_pat <= r)
+                                NoCls1clst = np.sum(F2 & targets)
+                                NoCls2clst = np.sum(F2 & ~targets)-1
+                        
+                        if Dist_test <= r:
+                            patterns_P = patterns*fstar[:,i][..., None]
+                            test_P = test*fstar[:, i]
+                            Dist = np.abs(
+                                np.sqrt(
+                                    np.sum(
+                                        (patterns_P-test_P[..., None])**2,0)))
+                            min1 = np.msort(Dist)
+                            min_Uniq = np.unique(min1)
+                            m = -1
+                            No_nereser = 0
+                            while No_nereser<knn:
+                                m = m+1
+                                a1 = min_Uniq[m]
+                                NN = Dist <= a1
+                                No_nereser = np.sum(NN)
+                        
+                            NoNNC1[0,i] = np.sum(NN & targets)
+                            NoNNC2[0,i] = np.sum(NN & ~targets)
+                            if NoNNC2[0,i] > NoNNC1[0,i]:
+                                S[0,i] = 1
+            radious[0, i] = r
+
+        Q1 = (NoNNC1) > (NoNNC2knn)
+        Q2 = (NoNNC2) > (NoNNC1knn)
+        S_Class1 = np.sum(Q1 & targets) / NC1
+        S_Class2 = np.sum(Q2 & ~targets) / NC2
+
+        if S_Class1 == 0 and S_Class2 == 0:
+            Q1 = (NoNNC1knn) > (NoNNC2knn)
+            Q2 = (NoNNC2knn) > (NoNNC1knn)
+            S_Class1 = np.sum(Q1 & targets)/NC1
+            test = Q2 & np.logical_not(targets)
+            S_Class2 = np.sum(Q2 & np.logical_not(targets))/NC2
+
+        return [S_Class1, S_Class2, radious]
+
+    def accuracy(self, s_class_1, s_class_2, test_tables):
+
+        n_test = test_tables.shape[1]
+        er_classification = np.zeros((1, 1))
+        er_cl_s_2 = np.zeros((1, 1))
+        er_cl_s_1 = np.zeros((1, 1))
+        dc_ls_1 = np.zeros((1, 1))
+        dc_ls_2 = np.zeros((1, 1))
+        n_cls_1_test = np.sum(test_tables)
+        n_cls_2_test = n_test - n_cls_1_test
+        n = 0
+
+        DQ0 = test_tables == 0
+        SS1 = s_class_1
+        SS2 = s_class_2
+        DQ1 = (SS1) > (SS2)
+        DQ1 = np.double(DQ1)
+        DQ1[DQ0] = 0
+        dc_ls_1[n] = np.sum(np.sum(DQ1))
+        er_cl_s_1[n] = 1 - dc_ls_1[n] / n_cls_1_test
+        er_cl_s_1[n] = er_cl_s_1[n] * 100
+
+        DQ0_SCZ = test_tables == 0
+        SS1_SCZ = s_class_1
+        SS2_SCZ = s_class_2
+        DQ1_SCZ = (SS1_SCZ) < (SS2_SCZ)
+        DQ1_SCZ = np.double(DQ1_SCZ)
+        DQ1_SCZ[~DQ0_SCZ] = 0
+        dc_ls_2[n] = np.sum(np.sum(DQ1_SCZ))
+        er_cl_s_2[n] = 1-dc_ls_2[n] / n_cls_2_test
+        er_cl_s_2[n] = er_cl_s_2[n] * 100
+
+        er_classification[n] = 1 - (dc_ls_1[n] + dc_ls_2[n]) / n_test
+        er_classification[n] = er_classification[n] * 100
+
+        return er_cl_s_1, er_cl_s_2, er_classification
 
 mat = loadmat('./data/matlab_Data')
 
@@ -323,16 +475,14 @@ training_labels = mat['TrainLables']
 testing_data = mat['Test']
 testing_labels = mat['TestLables']
 
+data = loadmat('./data/matlab')
+
+# fstar = data['fstar']
+# gamma=0.2
+# knn=1
+
+
 lfs = LocalFeatureSelection()
-lfs.fit(training_data, training_labels)
-print(lfs.fstar)
-
-# if targets(1,y)==1
-# if targets(1,Q(u))==1 && (No_NN_C1-1)>No_NN_C2
-# if targets(1,Q(u))==0 && No_NN_C1>(No_NN_C2-1)
-
-# if targets(1,y)==0
-# quasiTest_Class=targets(1,Q(u));
-# if quasiTest_Class==1 && (No_NN_C1-1)<No_NN_C2
-# if quasiTest_Class==0 && No_NN_C1<(No_NN_C2-1)
-
+lfs.fit(training_data, training_labels, testing_data, testing_labels)
+# SClass1,SClass2 = lfs.classification(training_data, training_labels, training_labels.shape[1], testing_data, fstar, gamma, knn)
+# er_cl_s_1, er_cl_s_2, er_classification = lfs.accuracy(SClass1,SClass2, testing_labels)
