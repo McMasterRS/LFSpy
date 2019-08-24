@@ -9,7 +9,6 @@
 # NRRP:    number of iterations for randomized rounding process (defaul 2000)
 
 # 11 with kiret
-
 import numpy as np
 from scipy.io import loadmat
 from scipy.optimize import linprog
@@ -55,22 +54,40 @@ class LocalFeatureSelection():
     # FES might be feature estimation!
     def fit(self, training_data, training_labels, test_data, test_labels):
 
+        _avg_feature_dist_same = [loadmat('./data/0_a')['a'], loadmat('./data/1_a')['a']] # a always ends up as the average distance for all same class observations
+        _avg_feature_dist_diff = [loadmat('./data/0_b')['b'], loadmat('./data/1_b')['b']]  # b always ends up as the average distance for all different classed observations
+        _epsilon_max = [loadmat('./data/0_epsilon_max')['EpsilonMax'], loadmat('./data/1_epsilon_max')['EpsilonMax']]
+        _TT = [loadmat('./data/0_TT')['TT_dump'], loadmat('./data/1_TT')['TT_dump']]
+        
+        _A_n_unq = [loadmat('./data/0_A_dump')['A_dump'], loadmat('./data/1_A_dump')['A_dump']]
+        
+        _bratio = [loadmat('./data/0_bratio')['Bratio'], loadmat('./data/1_bratio')['Bratio']]
+        _radious = [loadmat('./data/0_radious')['radiuos'], loadmat('./data/1_radious')['radiuos']]
+        _feasib = [loadmat('./data/0_feasib')['feasib'], loadmat('./data/1_feasib')['feasib']]
+
+        _tb_temp = [loadmat('./data/0_TBTemp')['TBTemp'], loadmat('./data/1_TBTemp')['TBTemp']]
+        _tr_temp = [loadmat('./data/0_TRTemp')['TRTemp'], loadmat('./data/1_TRTemp')['TRTemp']]
+
+        _fstar = loadmat('./data/0_fstar')['fstar']
+
         self.fstar = np.zeros(training_data.shape)          # selected features for each representative point; if fstar(i, j) = 1, ith feature is selected for jth representative point.
         self.fstar_lin = np.zeros(training_data.shape)      # fstar before applying randomized rounding process
+
+        self.fstar = _fstar
 
         m_features, n_observations = training_data.shape    # (M, N) M number of candidate features, N observations (160x100)
         n_total_cls = [np.sum(training_labels^1), np.sum(training_labels)] # Total number of each class in our training data
         training_labels = training_labels[0] # I want this as a 1 dimensional array so I can use it as a mask throughout
 
         overall_feasibility = np.zeros((n_observations, self.n_beta)) # Whether this was feasible of not
-        overall_radious = np.zeros((n_observations, self.n_beta)) # radious is the distance needed from each point, to find something
+        overall_radious = np.zeros((n_observations, self.n_beta)).astype(int) # radious is the distance needed from each point, to find something
         overall_b_ratio = np.zeros((n_observations, self.n_beta)) # B ratio?
         tb_temp = np.zeros((m_features, n_observations, self.n_beta))
         tr_temp = np.zeros((m_features, n_observations, self.n_beta))
 
         # For each observation, we calculate an fstar value for each feature
         # for i_observation, selected_observation in enumerate(training_data.T, start=0):
-        for z in range(self.tau):
+        for z in range(1, self.tau):
             for i_observation in range(0, n_observations): # Leave one out class testing
 
                 selected_observation = training_data[:, i_observation][..., None]
@@ -90,13 +107,13 @@ class LocalFeatureSelection():
                 fstar_mask = self.fstar[:, i_observation].astype(bool) # fstar is binary if a feature is relevent for this observations
 
                 # Calculate the difference between this obseration and all other observations
-                observation_deltas = (training_data - selected_observation)**2
+                observation_distances = (training_data - selected_observation)**2
                 # Possibly logistic regression weights?
                 # Calculate a weight for each observation based on if we've previously found fstar values for its features
-                fstar_observation_deltas = (np.sqrt(np.sum(observation_deltas[fstar_mask, :], axis=0))) # total similarity along features selected by fstar
+                fstar_observation_distances = (np.sqrt(np.sum(observation_distances[fstar_mask, :], axis=0))) # total similarity along features selected by fstar
                 observation_weight = np.zeros((n_observations, n_observations))
-                observation_weight[:, training_labels == 0] = np.exp((-(fstar_observation_deltas[training_labels == 0] - np.min(fstar_observation_deltas[training_labels == 0]))**2)/self.sigma)
-                observation_weight[:, training_labels == 1] = np.exp((-(fstar_observation_deltas[training_labels == 1] - np.min(fstar_observation_deltas[training_labels == 1]))**2)/self.sigma)
+                observation_weight[:, training_labels == 0] = np.exp((-(fstar_observation_distances[training_labels == 0] - np.min(fstar_observation_distances[training_labels == 0]))**2)/self.sigma)
+                observation_weight[:, training_labels == 1] = np.exp((-(fstar_observation_distances[training_labels == 1] - np.min(fstar_observation_distances[training_labels == 1]))**2)/self.sigma)
                 observation_weight[:, i_observation] = 0
                 average_observation_weight = np.mean(observation_weight, axis=0) # mean weight of all observations
                 normalized_weight = np.zeros((1, n_observations)) # normalized weight for all observations not including the current observation
@@ -104,33 +121,50 @@ class LocalFeatureSelection():
                 normalized_weight[:, training_labels == 1] = np.round(average_observation_weight[training_labels == 1]/np.sum(average_observation_weight[training_labels == 1]), decimals=16)
 
                 # Find the average weighted difference for each feature
-                average_feature_deltas = [0, 0]
-                average_feature_deltas[matching_label] = np.round(np.sum(normalized_weight[0, excluding_selected & (training_labels == matching_label)] * observation_deltas[:, excluding_selected & (training_labels == matching_label)], axis=1) / (n_total_cls[matching_label]-1), decimals=16)
-                average_feature_deltas[nonmatching_label] = np.sum(normalized_weight[0, excluding_selected & (training_labels == nonmatching_label)] * observation_deltas[:, excluding_selected & (training_labels == nonmatching_label)], axis=1)/n_total_cls[nonmatching_label]
+                average_feature_distances = [0, 0]
+                average_feature_distances[matching_label] = np.round(np.sum(normalized_weight[0, excluding_selected & (training_labels == matching_label)] * observation_distances[:, excluding_selected & (training_labels == matching_label)], axis=1) / (n_total_cls[matching_label]-1), decimals=16)
+                average_feature_distances[nonmatching_label] = np.round(np.sum(normalized_weight[0, excluding_selected & (training_labels == nonmatching_label)] * observation_distances[:, excluding_selected & (training_labels == nonmatching_label)], axis=1)/n_total_cls[nonmatching_label], decimals=16)
+
+                diff_a = average_feature_distances[matching_label] - _avg_feature_dist_same[z][i_observation, :]
+                diff_b = average_feature_distances[nonmatching_label] - _avg_feature_dist_diff[z][i_observation, :]
+                print("-------------------------", z, i_observation, "-------------------------")
+                print("avg_feature_dist", z, i_observation, np.average(diff_a), np.average(diff_b))
+                # average_feature_distances[matching_label] = _avg_feature_dist_same[z][i_observation, :]
+                # average_feature_distances[nonmatching_label] = _avg_feature_dist_diff[z][i_observation, :]
+
+###################################################################################################
+###################################################################################################
 
                 # 
                 A_ub_0 = np.concatenate((np.ones((1, m_features)), -np.ones((1, m_features))), axis=0) # The inequality constraint matrix. Each row of A_ub specifies the coefficients of a linear inequality constraint on x.
                 b_ub_0 = np.array([[self.alpha], [-1]]) # The inequality constraint vector. Each element represents an upper bound on the corresponding value of A_ub @ x.
 
-                linprog_res_0 = linprog(-average_feature_deltas[nonmatching_label], A_ub=A_ub_0, b_ub=b_ub_0, bounds=(0, 1), method='interior-point', options={'tol':0.000001, 'maxiter': 200})             # This is secretly a maximization function
+                linprog_res_0 = linprog(-average_feature_distances[nonmatching_label], A_ub=A_ub_0, b_ub=b_ub_0, bounds=(0, 1), method='interior-point', options={'tol':0.000001, 'maxiter': 200})             # This is secretly a maximization function
 
                 if linprog_res_0.success:
                     epsilon_max = -linprog_res_0.fun
+
+                    # diff = epsilon_max - _epsilon_max[z][i_observation, 0]
+                    # print("epsilon max:", diff, [epsilon_max, _epsilon_max[z][i_observation, 0]] )
+                    # epsilon_max = _epsilon_max[z][i_observation, 0]
 
                     for i_beta in range(0, self.n_beta): # beta is kind of the granularity or resolution, higher = better estimation?
                         beta = np.round(1/self.n_beta * (i_beta + 1), decimals=15)
                         epsilon = beta * epsilon_max
 
-                        A_ub_1 = np.vstack((np.ones((1, m_features)), -np.ones((1, m_features)), -average_feature_deltas[nonmatching_label])) # BB TODO: Rename
+                        A_ub_1 = np.vstack((np.ones((1, m_features)), -np.ones((1, m_features)), -average_feature_distances[nonmatching_label])) # BB TODO: Rename
                         b_ub_1 = np.vstack((self.alpha, -1, -epsilon)) # b1 TODO: Rename
 
                         # linprog_res_1.x is our best estimate for which class is associated with what feature.
-                        linprog_res_1 = linprog(average_feature_deltas[matching_label], A_ub=A_ub_1, b_ub=b_ub_1, callback=linprog_callback, bounds=(0.0, 1.0), method='interior-point', options={ 'tol':1e-6, 'maxiter': 200})
+                        linprog_res_1 = linprog(average_feature_distances[matching_label], A_ub=A_ub_1, b_ub=b_ub_1, callback=linprog_callback, bounds=(0.0, 1.0), method='interior-point', options={ 'tol':1e-6, 'maxiter': 200})
 
                         class_estimations = linprog_res_1.x[..., None]
+                        # diff = class_estimations - _TT[z][i_observation, i_beta, :]
+                        # print("class_estimations: ", np.average(diff))
+                        # class_estimations = _TT[z][i_observation, i_beta, :][..., None]
 
-    ###################################################################################################
-    ###################################################################################################
+    # ###################################################################################################
+    # ###################################################################################################
 
                         if linprog_res_1.success:
                             # Random rounding, for each of our estimates that are close to 0.5 (were in the middle of what class it should be)
@@ -140,9 +174,12 @@ class LocalFeatureSelection():
                             unique_options = np.unique(requires_adjustment, axis=1) # this will result in all probable options for what our less certain features can be
                             n_options = unique_options.shape[1]
 
+                            # diff = n_options - _A_n_unq[z][i_observation, i_beta]
+                            # print("unq options", diff, [n_options, _A_n_unq[z][i_observation, i_beta]] )
+
                             option_feasabilities = np.zeros((1, n_options))[0] # not all options are feasible, this is adjusted as feasible options are found
                             option_radiuses = np.zeros((1, n_options))[0]
-                            option_delta_within = np.inf * np.ones((1, n_options))[0]
+                            option_distance_within = np.inf * np.ones((1, n_options))[0]
 
                             dr = np.zeros((1, n_options))
                             far = np.zeros((1, n_options))
@@ -154,31 +191,31 @@ class LocalFeatureSelection():
 
                                         option_feasabilities[i_option] = 1 # this is a feasible option if the above criteria is fulfilled
                                         representative_points = training_data[option, :] # Each feature that has been selected in this option
-                                        option_delta_within[i_option] = average_feature_deltas[matching_label] @ option  # get our previously calculated feature delta for the selected features
+                                        option_distance_within[i_option] = average_feature_distances[matching_label] @ option  # get our previously calculated feature distance for the selected features
                                         active_point = representative_points[:, i_observation][..., None]
-                                        rep_deltas = np.abs(np.sqrt(np.sum((-representative_points + active_point) ** 2, 0))) # We get the difference between this active point and all other rep points
-                                        unique_deltas = np.msort(np.unique(rep_deltas)) # we filter out all duplicate deltas and sort in ascending order in order to find the smallest delta
+                                        rep_distances = np.abs(np.sqrt(np.sum((-representative_points + active_point) ** 2, 0))) # We get the difference between this active point and all other rep points
+                                        unique_distances = np.msort(np.unique(rep_distances)) # we filter out all duplicate distances and sort in ascending order in order to find the smallest distance
 
                                         # Increase the difference threshold until we have more dissimilar observations than similar observations
-                                        for i_delta, delta in enumerate(unique_deltas, start=0):
+                                        for i_distance, distance in enumerate(unique_distances, start=0):
 
-                                            radious = delta
-                                            observations_within_delta = (rep_deltas <= delta) # find all representative points that are atleast delta different
+                                            radious = distance
+                                            observations_within_distance = (rep_distances <= distance) # find all representative points that are atleast distance different
                                             n_cls_within = [
-                                                np.sum((training_labels^1)[observations_within_delta]),   # the number of 0's that fall within this difference threshold
-                                                np.sum(training_labels[observations_within_delta])        # the number of 1's within the zone
+                                                np.sum((training_labels^1)[observations_within_distance]),   # the number of 0's that fall within this difference threshold
+                                                np.sum(training_labels[observations_within_distance])        # the number of 1's within the zone
                                             ]
                                             n_cls_within[selected_label] = n_cls_within[selected_label] - 1     # we subtract 1 since we arnt including our selected point
-                                            # We want there to be less of our similar class proportionally at this delta than our dissimilar class
+                                            # We want there to be less of our similar class proportionally at this distance than our dissimilar class
                                             if self.gamma * (n_cls_within[selected_label]/(n_total_cls[selected_label]-1)) < (n_cls_within[selected_label^1]/n_total_cls[selected_label^1]):
-                                                if i_delta > 0:
-                                                    radious = 0.5 * (radious + unique_deltas[i_delta-1]) # this is the radious of how far we need to go for this
+                                                if i_distance > 0:
+                                                    radious = 0.5 * (radious + unique_distances[i_distance-1]) # this is the radious of how far we need to go for this
                                                     n_cls_within[selected_label] = n_cls_within[selected_label] + 1 # increment the cound of how many classes are within this radious
 
                                                 if radious == 0: # if the radious is 0, that is probably if the point is right on top of it, then pad it a bit
                                                     radious = 0.000001
-
-                                                observations_within_radious = (rep_deltas <= radious) # how many are within the zone
+                                                option_radiuses[i_option] = radious
+                                                observations_within_radious = (rep_distances <= radious) # how many are within the zone
                                                 rep_points_within_radious = representative_points[:, (observations_within_radious == 1)] # these are which points are within the zone
                                                 classes_within_radious = training_labels[observations_within_radious == 1]
                                                 dr[0, i_option] = 0
@@ -186,13 +223,13 @@ class LocalFeatureSelection():
 
                                                 for i_point, rep_point_within in enumerate(rep_points_within_radious.T):
                                                     rep_point_within = rep_point_within[..., None]
-                                                    dist_quasi_test = np.absolute(np.sqrt(np.sum((representative_points - rep_point_within) ** 2, axis=0))) # delta between this point and all other points
+                                                    dist_quasi_test = np.absolute(np.sqrt(np.sum((representative_points - rep_point_within) ** 2, axis=0))) # distance between this point and all other points
                                                     dist_quasi_test_cls = classes_within_radious[i_point]
                                                     min_uniq = np.sort(np.unique(dist_quasi_test)) # we once again sort the features by ascending difference
                                                     total_nearest_neighbours = 0
                                                     #  Searches until it finds k nearest neighbours
-                                                    for i_delta_within, delta_within in enumerate(min_uniq):
-                                                        nearest_neighbours = dist_quasi_test <= min_uniq[i_delta_within] # from smallest to largest, tries to find k nearest neighbours
+                                                    for i_distance_within, distance_within in enumerate(min_uniq):
+                                                        nearest_neighbours = dist_quasi_test <= min_uniq[i_distance_within] # from smallest to largest, tries to find k nearest neighbours
                                                         total_nearest_neighbours = np.sum(nearest_neighbours)
                                                         if(total_nearest_neighbours > self.knn):
                                                             break
@@ -215,26 +252,42 @@ class LocalFeatureSelection():
                                 dr/n_total_cls[0] - far/n_total_cls[1], # we get the difference between the proportion of similar to dissimilar neighbouring points within the radious
                                 dr/n_total_cls[1] - far/n_total_cls[0]
                             ]
-                            i_lowest_distance_within = np.argmin(option_delta_within) # find the shortest within distance
+                            i_lowest_distance_within = np.argmin(option_distance_within) # find the shortest within distance
                             TT_binary = unique_options[:, i_lowest_distance_within]
                             overall_feasibility[i_observation, i_beta] = option_feasabilities[i_lowest_distance_within]
                             overall_radious[i_observation, i_beta] = option_radiuses[i_lowest_distance_within]
                             overall_b_ratio[i_observation, i_beta] = eval_criteria[training_labels[i_observation]][0, i_lowest_distance_within]
-                            # if overall_b_ratio[i_observation, i_beta] != _bratio[i_observation, i_beta]:
-                            #     for i in range(160):
-                            #         print(_TT[i_observation, i_beta, i], class_estimations[i, 0])
-                            #     print('oops')
+
+                            # diff = overall_b_ratio[i_observation, i_beta] - _bratio[z][i_observation, i_beta]
+                            # print('bratio', diff, [overall_b_ratio[i_observation, i_beta], _bratio[z][i_observation, i_beta]])
+
+                            # diff = overall_radious[i_observation, i_beta] - _bratio[z][i_observation, i_beta]
+                            # print('radious', diff, [overall_radious[i_observation, i_beta], _radious[z][i_observation, i_beta]])
+
+                            # diff = overall_feasibility[i_observation, i_beta] - _bratio[z][i_observation, i_beta]
+                            # print('feasib', diff, [overall_feasibility[i_observation, i_beta], _feasib[z][i_observation, i_beta]])
+
+
                             if overall_feasibility[i_observation, i_beta] == 1:
                                 tb_temp[:, i_observation, i_beta] = TT_binary
                                 tr_temp[:, i_observation, i_beta] = linprog_res_1.x
 
-                bratio = overall_b_ratio
-                overall_b_ratio[overall_feasibility == 0] = -np.inf
-                I1 = np.argmax(overall_b_ratio, axis=1) # what column (observation) contains the largest value for each row (feature)
+                                # diff = np.sum(tb_temp[:, i_observation, i_beta] != _tb_temp[z][:, i_observation, i_beta])
+                                # print('tb_temp', diff, np.sum(tb_temp[:, i_observation, i_beta]), np.sum(_tb_temp[z][:, i_observation, i_beta]))
 
-                for j in range(n_observations):
-                    self.fstar[:, j] = tb_temp[:, i_observation, I1[j]] # what class is associated with the observation that has the largest value for this feature?
-                    self.fstar_lin[:, j] = tr_temp[:, i_observation, I1[j]]
+                                # diff = np.sum(tr_temp[:, i_observation, i_beta] - _tr_temp[z][:, i_observation, i_beta])
+                                # print('tr_temp', diff, np.sum(tr_temp[:, i_observation, i_beta]), np.sum(_tr_temp[z][:, i_observation, i_beta]))
+
+            overall_b_ratio[overall_feasibility == 0] = -np.inf
+            I1 = np.argmax(overall_b_ratio, axis=1) # what column (observation) contains the largest value for each row (feature)
+
+            for j in range(n_observations):
+                self.fstar[:, j] = tb_temp[:, j, I1[j]] # what class is associated with the observation that has the largest value for this feature?
+                self.fstar_lin[:, j] = tr_temp[:, i_observation, I1[j]]
+
+                # diff = np.sum(self.fstar[:, j] != _fstar[:, j])
+                # print("fstar", diff, [np.sum(self.fstar[:, j]), np.sum(_fstar[:, j])])
+
             print('done')
 
         SClass1,SClass2 = self.classification(training_data, training_labels, 100, test_data, self.fstar, self.gamma, self.knn)

@@ -10,6 +10,8 @@ feasib=zeros(N,NBeta);
 radiuos=zeros(N,NBeta);
 TT_dump = zeros(N,NBeta,160);
 BB_dump = zeros(N,NBeta,160);
+A_dump = zeros(N, NBeta);
+
 %parfor i=1:N
 for i=1:N
     for n=1:NBeta
@@ -17,7 +19,7 @@ for i=1:N
             M,alpha);
         if exitflag==1
             TT_dump(i,n,:) = TT;
-            [Bratio(i,n),T_temp,feasib(i,n),radiuos(i,n)]=GH_snapping...
+            [Bratio(i,n),T_temp,feasib(i,n),radiuos(i,n), A_dump(i, n)]=GH_snapping...
                 (NRRP,M,i,BB,b1,gamma,TT,patterns,targets,N,a(i,:),b(i,:),knn, n);   
             if feasib(i,n)==1
                 TBTemp(:,i,n)=T_temp;
