@@ -73,8 +73,6 @@ class LocalFeatureSelection():
         self.fstar = np.zeros(training_data.shape)          # selected features for each representative point; if fstar(i, j) = 1, ith feature is selected for jth representative point.
         self.fstar_lin = np.zeros(training_data.shape)      # fstar before applying randomized rounding process
 
-        self.fstar = _fstar
-
         m_features, n_observations = training_data.shape    # (M, N) M number of candidate features, N observations (160x100)
         n_total_cls = [np.sum(training_labels^1), np.sum(training_labels)] # Total number of each class in our training data
         training_labels = training_labels[0] # I want this as a 1 dimensional array so I can use it as a mask throughout
@@ -87,7 +85,7 @@ class LocalFeatureSelection():
 
         # For each observation, we calculate an fstar value for each feature
         # for i_observation, selected_observation in enumerate(training_data.T, start=0):
-        for z in range(1, self.tau):
+        for z in range(0, self.tau):
             for i_observation in range(0, n_observations): # Leave one out class testing
 
                 selected_observation = training_data[:, i_observation][..., None]
@@ -104,17 +102,22 @@ class LocalFeatureSelection():
                 n_excluded_class = [np.sum(excluded_labels^1), np.sum(excluded_labels)]
 
                 # basically, if we already suspect the class for each feature from previous iterations, we bump it in that direction
-                fstar_mask = self.fstar[:, i_observation].astype(bool) # fstar is binary if a feature is relevent for this observations
+                fstar_mask = self.fstar.astype(bool) # fstar is binary if a feature is relevent for this observations
 
                 # Calculate the difference between this obseration and all other observations
                 observation_distances = (training_data - selected_observation)**2
                 # Possibly logistic regression weights?
                 # Calculate a weight for each observation based on if we've previously found fstar values for its features
-                fstar_observation_distances = (np.sqrt(np.sum(observation_distances[fstar_mask, :], axis=0))) # total similarity along features selected by fstar
                 observation_weight = np.zeros((n_observations, n_observations))
-                observation_weight[:, training_labels == 0] = np.exp((-(fstar_observation_distances[training_labels == 0] - np.min(fstar_observation_distances[training_labels == 0]))**2)/self.sigma)
-                observation_weight[:, training_labels == 1] = np.exp((-(fstar_observation_distances[training_labels == 1] - np.min(fstar_observation_distances[training_labels == 1]))**2)/self.sigma)
-                observation_weight[:, i_observation] = 0
+
+                for i in range(n_observations):
+                    fstar_feature_dist_0 = (np.sqrt(np.sum(observation_distances[:, excluding_selected & (training_labels == 0)] * fstar_mask[:, i][..., None], axis=0))) # total similarity along features selected by fstar
+                    fstar_feature_dist_1 = (np.sqrt(np.sum(observation_distances[:, excluding_selected & (training_labels == 1)] * fstar_mask[:, i][..., None], axis=0))) # total similarity along features selected by fstar
+                    w11 = np.exp((-(fstar_feature_dist_1 - np.min(fstar_feature_dist_1))**2)/self.sigma)
+                    w22 = np.exp((-(fstar_feature_dist_0 - np.min(fstar_feature_dist_0))**2)/self.sigma)
+                    observation_weight[i, excluding_selected & (training_labels == 0)] = w22
+                    observation_weight[i, excluding_selected & (training_labels == 1)] = w11
+
                 average_observation_weight = np.mean(observation_weight, axis=0) # mean weight of all observations
                 normalized_weight = np.zeros((1, n_observations)) # normalized weight for all observations not including the current observation
                 normalized_weight[:, training_labels == 0] = np.round(average_observation_weight[training_labels == 0]/np.sum(average_observation_weight[training_labels == 0]), decimals=16)
@@ -129,8 +132,8 @@ class LocalFeatureSelection():
                 diff_b = average_feature_distances[nonmatching_label] - _avg_feature_dist_diff[z][i_observation, :]
                 print("-------------------------", z, i_observation, "-------------------------")
                 print("avg_feature_dist", z, i_observation, np.average(diff_a), np.average(diff_b))
-                # average_feature_distances[matching_label] = _avg_feature_dist_same[z][i_observation, :]
-                # average_feature_distances[nonmatching_label] = _avg_feature_dist_diff[z][i_observation, :]
+                average_feature_distances[matching_label] = _avg_feature_dist_same[z][i_observation, :]
+                average_feature_distances[nonmatching_label] = _avg_feature_dist_diff[z][i_observation, :]
 
 ###################################################################################################
 ###################################################################################################
