@@ -1,4 +1,0 @@
-*.log
-*.pyc
-__pycache__/*
-.vscode
