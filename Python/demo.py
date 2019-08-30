@@ -18,4 +18,4 @@ pipeline = Pipeline([('lfs', lfs)])
 
 pipeline.fit(X, y)
 Y = pipeline.predict(X_test)
-pipeline.score(y_test)
+pipeline.score(X_test, y_test)

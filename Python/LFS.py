@@ -1,12 +1,30 @@
-# class stub for interfacing with scikit learn pipeline.
-# Fit, transform, and fit_transform methods are required
-
-# gamma:   impurity level (default: 0.2)
-# tau:     number of iterations (default: 2)
-# sigma:   controls neighboring samples weighting (default: 1)
-# alpha:   maximum number of selected feature for each representative point
-# NBeta:   numer of distinct \beta (default: 20)
-# NRRP:    number of iterations for randomized rounding process (defaul 2000)
+# LFS: local feature selection and classification algorithm
+#  Citation: [1] and [2]
+# [1] N. Armanfard, JP. Reilly, and M. Komeili, "Local Feature Selection for Data Classification", IEEE Trans. on Pattern Analysis and Machine Intelligence, vol. 38, no. 6, pp. 1217-1227, 2016.
+# [2] N. Armanfard, JP. Reilly, and M. Komeili, "Logistic Localized Modeling of the Sample Space for Feature Selection and Classification", IEEE Transactions on Neural Networks and Learning Systems, vol. 29, no. 5, pp. 1396-1413, 2018
+# --------------------------------------------------------------------------
+# INPUT:
+#        Train (M by N):  training data : [x1,x2,...xN] Each column is an observation; M is number of candidate features.
+#        TrainLables (1 by N): class label = {0,1}.
+#        Test (M by K): M is number of candidate features; K is number of test points.
+#        TestLables (1 by K): class label = {0,1}.
+#        Para:  parameters.
+#            Para.gamma:   impurity level (default: 0.2).
+#            Para.tau:    number of iterations (default: 2).
+#            Para.sigma: controlls neighboring samples weighting (default: 1).
+#            Para.alpha:  maximum number of selected feature for each representative point.
+#            Para.NBeta:  numer of distinct \beta (default: 20).
+#            Para.NRRP:   number of iterations for randomized rounding process (defaul 2000).
+# OUTPUT:
+#        fstar (M by N):  selected features for each representative point; if fstar(i,j)=1, jth feature is selected for ith representative point.
+#        fstarLin (M by N): it is fstar before applying randomized rounding process.
+#        ErCls1: it is the classification error (in percent) associated to the input test points with class label 1.
+#        ErCls2: it is the classification error (in percent) associated to the input test points with class label 0.
+#        ErClassification: it is the total error (in percent) for the entire input test points.
+# --------------------------------------------------------------------------
+#  by Narges Armanfard (pythonized by Oliver Cook)
+#  update history: April 22 2019 (Matlab Code) August 30th 2019 (Python)
+#==========================================================================
 
 import numpy as np
 from scipy.io import loadmat
@@ -26,6 +44,7 @@ def distance_between(A, B, axis=None):
 class LocalFeatureSelection():
 
     def __init__(self, alpha=19, gamma=0.2, tau=2, sigma=1, n_beta=20, nrrp=2000, knn=1):
+
         self.alpha = alpha         # , maximum number of selected features for each representative point
         self.gamma = gamma         # , impurity level (default: 0.2)
         self.tau = tau             # , number of iterations (default: 2)
@@ -34,13 +53,14 @@ class LocalFeatureSelection():
         self.nrrp = nrrp           # number of iterations for randomized rounding process (default: 2000)
         self.knn = knn             # k nearest neighbours
 
-
     ###############################################################################################
     # Fit (scikit learn pipeline function)
-    ### fits a set of training data to a model
+    ### fits a model
+    # Input:
     # -> training_data (X)   : The set of M by N features and observations
     # -> training_labels (y) : The set of labels for each observation
-    # <- fstar : Selected features for each observation
+    # Output / Self assignment:
+    #    self.fstar : Selected features for each observation
     ###############################################################################################
 
     def fit(self, training_data, training_labels):
@@ -59,7 +79,6 @@ class LocalFeatureSelection():
         tb_temp = np.zeros((m_features, n_observations, self.n_beta))
         tr_temp = np.zeros((m_features, n_observations, self.n_beta))
 
-
         for z in range(0, self.tau):
     
             # For each feature across all observations in our training set we calculate a boolean fstar
@@ -76,13 +95,12 @@ class LocalFeatureSelection():
                 excluded_labels = training_labels[excluding_selected] # get the labels not at i, (convert to bool so we can use it as a mask)
                 n_excluded_class = [np.sum(excluded_labels^1), np.sum(excluded_labels)]
 
-                # basically, if we already suspect the class for each feature from previous iterations, we bump it in that direction
-                fstar_mask = self.fstar.astype(bool) # fstar is binary if a feature is relevent for this observations
+                fstar_mask = self.fstar.astype(bool) # fstar mask to select all active features for this observation
 
                 # Calculate the difference between this obseration and all other observations
                 observation_distances = (training_data - current_observation)**2
 
-                # Calculate a weight for each observation based on if we've previously found fstar values for its features
+                # Calculate a weight for each observation based on if we've previously found fstar values for the features
                 observation_weight = np.zeros((n_observations, n_observations))
 
                 for i in range(n_observations):
@@ -96,18 +114,15 @@ class LocalFeatureSelection():
 
                 average_observation_weight = np.mean(observation_weight, axis=0) # mean weight of all observations or features
                 normalized_weight = np.zeros((1, n_observations)) # normalized weight for all observations not including the current observation
-                normalized_weight[:, training_labels == 0] = np.round(average_observation_weight[training_labels == 0]/np.sum(average_observation_weight[training_labels == 0]), decimals=16)
-                normalized_weight[:, training_labels == 1] = np.round(average_observation_weight[training_labels == 1]/np.sum(average_observation_weight[training_labels == 1]), decimals=16)
+                normalized_weight[:, training_labels == 0] = average_observation_weight[training_labels == 0]/np.sum(average_observation_weight[training_labels == 0])
+                normalized_weight[:, training_labels == 1] = average_observation_weight[training_labels == 1]/np.sum(average_observation_weight[training_labels == 1])
 
                 # Find the average weighted difference for each feature
                 average_feature_distances = [0, 0]
-                average_feature_distances[matching_label] = np.round(np.sum(normalized_weight[0, excluding_selected & (training_labels == matching_label)] * observation_distances[:, excluding_selected & (training_labels == matching_label)], axis=1) / (n_total_cls[matching_label]-1), decimals=16)
-                average_feature_distances[nonmatching_label] = np.round(np.sum(normalized_weight[0, excluding_selected & (training_labels == nonmatching_label)] * observation_distances[:, excluding_selected & (training_labels == nonmatching_label)], axis=1)/n_total_cls[nonmatching_label], decimals=16)
+                average_feature_distances[matching_label] = np.sum(normalized_weight[0, excluding_selected & (training_labels == matching_label)] * observation_distances[:, excluding_selected & (training_labels == matching_label)], axis=1) / (n_total_cls[matching_label]-1)
+                average_feature_distances[nonmatching_label] = np.sum(normalized_weight[0, excluding_selected & (training_labels == nonmatching_label)] * observation_distances[:, excluding_selected & (training_labels == nonmatching_label)], axis=1)/n_total_cls[nonmatching_label]
 
                 print("-------------------------", z, i_observation, "-------------------------")
-
-###################################################################################################
-###################################################################################################
 
                 A_ub_0 = np.concatenate((np.ones((1, m_features)), -np.ones((1, m_features))), axis=0) # The inequality constraint matrix. Each row of A_ub specifies the coefficients of a linear inequality constraint on x.
                 b_ub_0 = np.array([[self.alpha], [-1]]) # The inequality constraint vector. Each element represents an upper bound on the corresponding value of A_ub @ x.
@@ -128,12 +143,9 @@ class LocalFeatureSelection():
 
                         class_estimations = linprog_res_1.x[..., None]
 
-    # ###################################################################################################
-    # ###################################################################################################
-
                         if linprog_res_1.success:
 
-                            # Random rounding, for each of our estimates that are close to 0.5 (were in the middle of what class it should be)
+                            # Random rounding, for each of our estimates that are close to 0.5 (in the middle of what class it should be)
                             np.random.seed(seed=20)
                             random_numbers=np.random.rand(m_features,self.nrrp)
 
@@ -170,14 +182,17 @@ class LocalFeatureSelection():
                                                 np.sum(training_labels[observations_within_distance])        # the number of 1's within the zone
                                             ]
                                             n_cls_within[selected_label] = n_cls_within[selected_label] - 1     # we subtract 1 since we arnt including our selected point
+
                                             # We want there to be less of our similar class proportionally at this distance than our dissimilar class
                                             if self.gamma * (n_cls_within[selected_label]/(n_total_cls[selected_label]-1)) < (n_cls_within[selected_label^1]/n_total_cls[selected_label^1]):
+                                                
                                                 if i_distance > 0:
                                                     radious = 0.5 * (radious + unique_distances[i_distance-1]) # this is the radious of how far we need to go for this
                                                     n_cls_within[selected_label] = n_cls_within[selected_label] + 1 # increment the cound of how many classes are within this radious
 
                                                 if radious == 0: # if the radious is 0, that is probably if the point is right on top of it, then pad it a bit
                                                     radious = 0.000001
+
                                                 option_radiuses[i_option] = radious
                                                 observations_within_radious = (rep_distances <= radious) # how many are within the zone
                                                 rep_points_within_radious = representative_points[:, (observations_within_radious == 1)] # these are which points are within the zone
@@ -192,7 +207,7 @@ class LocalFeatureSelection():
                                                     min_uniq = np.sort(np.unique(dist_quasi_test)) # we once again sort the features by ascending difference
                                                     total_nearest_neighbours = 0
                                                     
-                                                    #  Searches until it finds k nearest neighbours
+                                                    # Searches until it finds k nearest neighbours
                                                     for i_distance_within, distance_within in enumerate(min_uniq):
                                                         nearest_neighbours = dist_quasi_test <= min_uniq[i_distance_within] # from smallest to largest, tries to find k nearest neighbours
                                                         total_nearest_neighbours = np.sum(nearest_neighbours)
@@ -234,11 +249,30 @@ class LocalFeatureSelection():
                 self.fstar[:, j] = tb_temp[:, j, I1[j]] # what class is associated with the observation that has the largest value for this feature?
                 self.fstar_lin[:, j] = tr_temp[:, i_observation, I1[j]]
 
+    ###############################################################################################
+    # predict (scikit learn pipeline function)
+    ### predict class labels for training data from previously fit model
+    # Input:
+    # -> testing_data : Set of M observations by N features
+    # Output / Self assignment:
+    # <- self.prediction : N boolean class predictions
+    ###############################################################################################
+
     def predict(self, testing_data):
         SClass1, SClass2 = self.classification(testing_data)
         self.prediction_probabilities = [SClass2, SClass1]
         self.prediction = (SClass1 > SClass2).astype(int)
         return self.prediction
+
+    ###############################################################################################
+    # classification (internal feature classification function, called by predict function)
+    ### predict class labels for training data from previously fit model
+    # Input:
+    # -> testing_data : Set of M by N observations and features
+    # Output / Self assignment:
+    # <- SClass1 : N length, probabilities that each observation is class 1
+    # <- SClass2 : N length, probabilities that each observation is class 0
+    ################################################################################################
 
     def classification(self, testing_data):
         """ """
@@ -248,13 +282,28 @@ class LocalFeatureSelection():
         N = training_labels.shape[0]
         H = testing_data.shape[1]
 
-        s_class_1_sphere_knn = np.zeros((1, H))
-        s_class_2_sphere_knn = np.zeros((1, H))
+        s_class_1_sphere_knn = np.zeros((1, H))[0]
+        s_class_2_sphere_knn = np.zeros((1, H))[0]
 
         for t in range(H):
-            s_class_1_sphere_knn[0, t], s_class_2_sphere_knn[0, t], _ = self.class_sim_m(testing_data[:, t], N, training_data, training_labels, self.fstar, self.gamma, self.knn)
+            s_class_1_sphere_knn[t], s_class_2_sphere_knn[t], _ = self.class_sim_m(testing_data[:, t], N, training_data, training_labels, self.fstar, self.gamma, self.knn)
 
         return s_class_1_sphere_knn, s_class_2_sphere_knn
+
+    ###############################################################################################
+    # class_sim_m (internal feature classification function, called by classification function)
+    ### predict class labels for a single testing point based on previously fit model
+    # Input:
+    # -> test : Set of M by N observations and features
+    # -> N : Number of features
+    # -> patterns : Set of M by N observations and features of training data
+    # -> fstar : local active features for each observation, M by M
+    # -> gamma : impurity level
+    # -> knn : k nearest neighbours
+    # Output / Self assignment:
+    # <- SClass1 : probabilities that each observation is class 1
+    # <- SClass2 : probabilities that each observation is class 0
+    ################################################################################################
 
     def class_sim_m(self, test, N, patterns, targets, fstar, gamma, knn):
         
@@ -411,21 +460,33 @@ class LocalFeatureSelection():
 
         return [S_Class1, S_Class2, radious]
 
-    def score(self, testing_labels):
-        s_class_1 = self.prediction_probabilities[1]
-        s_class_1 = self.prediction_probabilities[0]
+    ###############################################################################################
+    # score (scikit learn pipeline function)
+    ### provide error estimates for previously classified test data from provided test labels
+    # Input:
+    # -> X_test : Set of M observations by N features, the testing data
+    # -> test_labels : Class labels to compare predicted labels to
+    # Output / Self assignment:
+    # <- er_cl_s_1 : classification error for observations with class 1
+    # <- er_cl_s_2 : classification error for observations with class 0
+    # <- er_classification : total classification error for both classes
+    ###############################################################################################
 
-        n_test = test_tables.shape[1]
+    def score(self, X_test, test_labels):
+        s_class_1 = self.prediction_probabilities[1]
+        s_class_2 = self.prediction_probabilities[0]
+
+        n_test = test_labels.shape[0]
         er_classification = np.zeros((1, 1))
         er_cl_s_2 = np.zeros((1, 1))
         er_cl_s_1 = np.zeros((1, 1))
         dc_ls_1 = np.zeros((1, 1))
         dc_ls_2 = np.zeros((1, 1))
-        n_cls_1_test = np.sum(test_tables)
+        n_cls_1_test = np.sum(test_labels)
         n_cls_2_test = n_test - n_cls_1_test
         n = 0
 
-        DQ0 = test_tables == 0
+        DQ0 = test_labels == 0
         SS1 = s_class_1
         SS2 = s_class_2
         DQ1 = (SS1) > (SS2)
@@ -435,7 +496,7 @@ class LocalFeatureSelection():
         er_cl_s_1[n] = 1 - dc_ls_1[n] / n_cls_1_test
         er_cl_s_1[n] = er_cl_s_1[n] * 100
 
-        DQ0_SCZ = test_tables == 0
+        DQ0_SCZ = test_labels == 0
         SS1_SCZ = s_class_1
         SS2_SCZ = s_class_2
         DQ1_SCZ = (SS1_SCZ) < (SS2_SCZ)
