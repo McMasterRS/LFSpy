@@ -11,7 +11,7 @@
 ### Installing
 - TODO install dependencies (sklearn, python environment)
 
-## Running
+## Usage
 
 ```python
 from LFS import LocalFeatureSelection
