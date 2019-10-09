@@ -2,14 +2,14 @@
 
 - TODO one paragraph specifics on what this is about
 
-## Getting Started
+## Installation
 
-### Prerequisites
-- TODO how to set up a sklearn pipeline
-- TODO how to run the sklearn pipeline
-
-### Installing
-- TODO install dependencies (sklearn, python environment)
+### Dependancies
+LFS requires:
+*  python
+* [NumPy](https://numpy.org/)
+* [SciPy](https://www.scipy.org/)
+* [Scikit-learn](https://scikit-learn.org/stable/index.html)
 
 ## Usage
 
@@ -24,17 +24,10 @@ predicted_labels = pipeline.predict(testing_data)
 total_error, class_error = pipeline.score(testing_data, testing_labels)
 ```
 
-## Built With
-- [NumPy](https://numpy.org/)
-- [SciPy](https://www.scipy.org/)
-
-## Contributing
-
-## Versioning
-
 ## Authors
-
-## License
+*  Narges Armanfard
+*  Oliver Cook
+*  Areeb Khawaja
 
 ## Acknowledgments
 
