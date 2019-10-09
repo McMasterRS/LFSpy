@@ -45,11 +45,11 @@ class LocalFeatureSelection():
 
     def __init__(self, alpha=19, gamma=0.2, tau=2, sigma=1, n_beta=20, nrrp=2000, knn=1):
 
-        self.alpha = alpha         # , maximum number of selected features for each representative point
-        self.gamma = gamma         # , impurity level (default: 0.2)
-        self.tau = tau             # , number of iterations (default: 2)
-        self.sigma = sigma         # , controls neighboring samples weighting (default: 1)
-        self.n_beta = n_beta       # , number of distinct beta (default: 20)
+        self.alpha = alpha         # maximum number of selected features for each representative point
+        self.gamma = gamma         # impurity level (default: 0.2)
+        self.tau = tau             # number of iterations (default: 2)
+        self.sigma = sigma         # controls neighboring samples weighting (default: 1)
+        self.n_beta = n_beta       # number of distinct beta (default: 20)
         self.nrrp = nrrp           # number of iterations for randomized rounding process (default: 2000)
         self.knn = knn             # k nearest neighbours
 
@@ -70,18 +70,18 @@ class LocalFeatureSelection():
         self.fstar = np.zeros(training_data.shape)          # selected features for each representative point; if fstar(i, j) = 1, ith feature is selected for jth representative point.
         self.fstar_lin = np.zeros(training_data.shape)      # fstar before applying randomized rounding process
 
-        m_features, n_observations = training_data.shape    # (M, N) M number of candidate features, N observations (160x100)
+        m_features, n_observations = training_data.shape    # (M, N) M number of candidate features, N observations
         n_total_cls = [np.sum(training_labels^1), np.sum(training_labels)] # Total number of each class in our training data
 
-        overall_feasibility = np.zeros((n_observations, self.n_beta)) # Whether this was feasible of not
-        overall_radious = np.zeros((n_observations, self.n_beta)) # radious is the distance needed from each point, to find something
-        overall_b_ratio = np.zeros((n_observations, self.n_beta)) # B ratio?
+        overall_feasibility = np.zeros((n_observations, self.n_beta))
+        overall_radious = np.zeros((n_observations, self.n_beta))
+        overall_b_ratio = np.zeros((n_observations, self.n_beta))
         tb_temp = np.zeros((m_features, n_observations, self.n_beta))
         tr_temp = np.zeros((m_features, n_observations, self.n_beta))
 
         for z in range(0, self.tau):
     
-            # For each feature across all observations in our training set we calculate a boolean fstar
+            # For each feature across all observations in our training set we calculate a [0,1] fstar value
             for i_observation in range(0, n_observations):
 
                 current_observation = training_data[:, i_observation][..., None]
@@ -100,7 +100,7 @@ class LocalFeatureSelection():
                 # Calculate the difference between this obseration and all other observations
                 observation_distances = (training_data - current_observation)**2
 
-                # Calculate a weight for each observation based on if we've previously found fstar values for the features
+                # adjust weighting for each observation based on if we've previously found fstar values for the features
                 observation_weight = np.zeros((n_observations, n_observations))
 
                 for i in range(n_observations):
@@ -122,8 +122,6 @@ class LocalFeatureSelection():
                 average_feature_distances[matching_label] = np.sum(normalized_weight[0, excluding_selected & (training_labels == matching_label)] * observation_distances[:, excluding_selected & (training_labels == matching_label)], axis=1) / (n_total_cls[matching_label]-1)
                 average_feature_distances[nonmatching_label] = np.sum(normalized_weight[0, excluding_selected & (training_labels == nonmatching_label)] * observation_distances[:, excluding_selected & (training_labels == nonmatching_label)], axis=1)/n_total_cls[nonmatching_label]
 
-                print("-------------------------", z, i_observation, "-------------------------")
-
                 A_ub_0 = np.concatenate((np.ones((1, m_features)), -np.ones((1, m_features))), axis=0) # The inequality constraint matrix. Each row of A_ub specifies the coefficients of a linear inequality constraint on x.
                 b_ub_0 = np.array([[self.alpha], [-1]]) # The inequality constraint vector. Each element represents an upper bound on the corresponding value of A_ub @ x.
 
@@ -136,7 +134,7 @@ class LocalFeatureSelection():
                         beta = np.round(1/self.n_beta * (i_beta + 1), decimals=15)
                         epsilon = beta * epsilon_max
 
-                        A_ub_1 = np.vstack((np.ones((1, m_features)), -np.ones((1, m_features)), -average_feature_distances[nonmatching_label])) # BB TODO: Rename
+                        A_ub_1 = np.vstack((np.ones((1, m_features)), -np.ones((1, m_features)), -average_feature_distances[nonmatching_label]))
                         b_ub_1 = np.vstack((self.alpha, -1, -epsilon)) # b1 TODO: Rename
 
                         linprog_res_1 = linprog(average_feature_distances[matching_label], A_ub=A_ub_1, b_ub=b_ub_1, bounds=(0.0, 1.0), method='interior-point', options={ 'tol':1e-6, 'maxiter': 200})
@@ -467,9 +465,8 @@ class LocalFeatureSelection():
     # -> X_test : Set of M observations by N features, the testing data
     # -> test_labels : Class labels to compare predicted labels to
     # Output / Self assignment:
-    # <- er_cl_s_1 : classification error for observations with class 1
-    # <- er_cl_s_2 : classification error for observations with class 0
-    # <- er_classification : total classification error for both classes
+    # <- self.classification_error_breakdown : classification error broken down by each class
+    # <- self.classification_error_total : total classification error for both classes
     ###############################################################################################
 
     def score(self, X_test, test_labels):
@@ -512,4 +509,4 @@ class LocalFeatureSelection():
         self.classification_error_total = er_classification
         self.classification_error_breakdown = [er_cl_s_2, er_cl_s_1]
 
-        return er_cl_s_1, er_cl_s_2, er_classification
+        return self.classification_error_total, self.classification_error_breakdown
