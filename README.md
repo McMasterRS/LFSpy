@@ -29,7 +29,10 @@ total_error, class_error = pipeline.score(testing_data, testing_labels)
 ## Authors
 *  Narges Armanfard
 *  Oliver Cook
-*  Areeb Khawaja
+*  Kiret Dhindsa
+*  Areeb Khawajaby
+*  Ron Harwood
+*  Thomas Mudway
 
 ## Acknowledgments
 
