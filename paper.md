@@ -88,7 +88,7 @@ Given training and testing data that are compatible with `scikit-learn` models, 
     predicted_labels = pipeline.predict(testing_data)
     total_error, class_error = pipeline.score(testing_data, testing_labels)
 
-
+<!---
 The LFS method involves a number of parameters that are implemented in `LFSpy`. Their definitions are given as follows:
 
 * `alpha`: the maximum number of selected features for each representative point
@@ -98,7 +98,7 @@ The LFS method involves a number of parameters that are implemented in `LFSpy`. 
 * `n_beta`: number of beta values to test
 * `nrrp`: number of iterations for randomized rounding process
 * `knn`: number of nearest neighbours to compare for classification
-
+--->
 
 The dependencies for `LFSpy` are as follows:
 
