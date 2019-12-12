@@ -6,6 +6,10 @@ This repository contains a python implementation of this method that is compatib
 
 ## Installation
 
+```bash
+pip install lfspy
+```
+
 ### Dependancies
 LFS requires:
 *  python
