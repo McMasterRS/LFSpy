@@ -22,12 +22,6 @@ authors:
  -  name: Ranil Sonnadara
     orcid: 0000-0001-8318-5714
     affiliation: "1, 2, 3"
- -  name: Jim Reilly
-    orcid: 0000-0002-9784-1804
-    affiliation: "4"
- -  name: Narges Armanfard
-    orcid: 0000-0002-5880-906X
-    affiliation: "5"
 affiliations:
  - name: Research and High Performance Computing, McMaster University
    index: 1
@@ -35,11 +29,7 @@ affiliations:
    index: 2
  - name: Department of Surgery, McMaster University
    index: 3
- - name: Department of Electrical and Computer Engineering, McMaster University
-   index: 4
- - name: Electrical and Computer Engineering, McGill University
-   index: 5
-date: 26 November 2019
+date: 12 December 2019
 bibliography: paper.bib
 ---
 
