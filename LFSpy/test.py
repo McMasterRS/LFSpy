@@ -1,7 +1,7 @@
 import numpy as np
 import warnings
 from scipy.io import loadmat
-from LFSpy import LocalFeatureSelection
+from LFS import LocalFeatureSelection
 from sklearn.pipeline import Pipeline
 from sklearn import datasets
 
@@ -35,7 +35,7 @@ def train_model(x_train, y_train, x_test, y_test):
     Trains an tests and LFS model using default parameters on the given dataset.
     '''
     print('Training and testing an LFS model with default parameters.\nThis may take a few minutes...')
-    lfs = LocalFeatureSelection()
+    lfs = LocalFeatureSelection(rr_seed=20) 
     pipeline = Pipeline([('classifier', lfs)])
     pipeline.fit(x_train, y_train)
     y_pred = pipeline.predict(x_test)

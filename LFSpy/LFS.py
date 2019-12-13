@@ -43,7 +43,7 @@ def distance_between(A, B, axis=None):
 
 class LocalFeatureSelection():
 
-    def __init__(self, alpha=19, gamma=0.2, tau=2, sigma=1, n_beta=20, nrrp=2000, knn=1):
+    def __init__(self, alpha=19, gamma=0.2, tau=2, sigma=1, n_beta=20, nrrp=2000, knn=1, rr_seed=None):
 
         self.alpha = alpha         # maximum number of selected features for each representative pointy
         self.gamma = gamma         # impurity level (default: 0.2)
@@ -52,6 +52,7 @@ class LocalFeatureSelection():
         self.n_beta = n_beta       # number of distinct beta (default: 20)
         self.nrrp = nrrp           # number of iterations for randomized rounding process (default: 2000)
         self.knn = knn             # k nearest neighbours
+        self.rr_seed = rr_seed     # seed value for random rounding process
 
     ###############################################################################################
     # Fit (scikit learn pipeline function)
@@ -144,7 +145,9 @@ class LocalFeatureSelection():
                         if linprog_res_1.success:
 
                             # Random rounding, for each of our estimates that are close to 0.5 (in the middle of what class it should be)
-                            np.random.seed(seed=20)
+                            if self.rr_seed is not None:
+                                np.random.seed(seed=self.rr_seed)
+
                             random_numbers=np.random.rand(m_features,self.nrrp)
 
                             requires_adjustment = random_numbers <= class_estimations # compare our class estimations against random numbers, where our results are close to 0.5 we will get true, otherwise False
