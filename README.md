@@ -12,10 +12,11 @@ pip install lfspy
 
 ### Dependancies
 LFS requires:
-*  python
-* [NumPy](https://numpy.org/)
-* [SciPy](https://www.scipy.org/)
-* [Scikit-learn](https://scikit-learn.org/stable/index.html)
+* Python 3
+* [NumPy](https://numpy.org/)>=1.14
+* [SciPy](https://www.scipy.org/)>=1.1
+* [Scikit-learn](https://scikit-learn.org/stable/index.html)>=0.18.2
+* [pytest](https://docs.pytest.org/en/latest/)>=5.0.0
 
 ### Testing
 We recommend running test.py after installing LFSpy to ensure the results obtained match expected outputs.
@@ -31,7 +32,8 @@ So far, LFSpy has been tested on Windows 10 with and without Conda, and on Ubunt
 ## Usage
 To use LFSpy on its own:
 ```python
-from LFSpy import Local FeatureSelection
+from LFSpy import LocalFeatureSelection
+
 lfs = LocalFeatureSelection()
 lfs.fit(training_data, training_labels)
 predicted_labels = lfs.predict(testing_data)
