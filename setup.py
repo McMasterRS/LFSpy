@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="LFSpy",
-    version="1.0.10",
+    version="1.0.1",
     author="Oliver Cook, Kiret Dhindsa, Areeb Khawaja, Ron Harwood, Thomas Mudway",
     install_requires=['numpy>=1.14', 'scipy>=1.1', 'scikit-learn>=0.18.2', 'pytest>=5.0.0'],
     long_description=long_description,
