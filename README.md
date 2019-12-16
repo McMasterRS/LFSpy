@@ -22,7 +22,7 @@ LFS requires:
 We recommend running test.py after installing LFSpy to ensure the results obtained match expected outputs.
 
 ```bash
-python test.py
+python test_lfs.py
 ```
 
 This will output to console whether the results of LFSpy on two datasets (the sample dataset provided in this repository, and scikit-learn's Fisher Iris dataset) are exactly as expected, within 2%, or not even within 2%. 
