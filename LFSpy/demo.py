@@ -1,5 +1,5 @@
 from scipy.io import loadmat
-from LFS import LocalFeatureSelection
+from .LFS import LocalFeatureSelection
 from sklearn.pipeline import Pipeline
 
 mat = loadmat('./matlab_Data')

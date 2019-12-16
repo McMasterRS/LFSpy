@@ -1,9 +1,11 @@
 import numpy as np
 import warnings
 from scipy.io import loadmat
-from LFS import LocalFeatureSelection
+from .LFS import LocalFeatureSelection
 from sklearn.pipeline import Pipeline
 from sklearn import datasets
+import pkg_resources
+from pathlib import Path
 
 def load_dataset(name):
     '''
@@ -11,7 +13,7 @@ def load_dataset(name):
     '''
     print('Loading dataset ' + name + '...')
     if name is 'sample':
-        mat = loadmat('matlab_Data')
+        mat = loadmat(Path(__file__).parent / 'matlab_Data.mat')
         training_data = mat['Train']
         training_labels = mat['TrainLables'][0]
         testing_data = mat['Test']
@@ -87,8 +89,6 @@ def verify_output(model_out, dataset_name):
     print('\n\n')
 
     return None
-
-
 
 training_data, training_labels, testing_data, testing_labels = load_dataset('sample')
 score, y_pred = train_model(training_data, training_labels, testing_data, testing_labels)
