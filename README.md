@@ -17,6 +17,17 @@ LFS requires:
 * [SciPy](https://www.scipy.org/)
 * [Scikit-learn](https://scikit-learn.org/stable/index.html)
 
+### Testing
+We recommend running test.py after installing LFSpy to ensure the results obtained match expected outputs.
+
+```bash
+python test.py
+```
+
+This will output to console whether the results of LFSpy on two datasets (the sample dataset provided in this repository, and scikit-learn's Fisher Iris dataset) are exactly as expected, within 2%, or not even within 2%. 
+
+So far, LFSpy has been tested on Windows 10 with and without Conda, and on Ubuntu. In all cases, results have been exactly the expected results.
+
 ## Usage
 
 ```python
