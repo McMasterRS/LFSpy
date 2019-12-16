@@ -45,6 +45,7 @@ Local feature selection is performed by promoting class-wise clustering in the n
 
 # Usage
 ``LFSpy`` is a Python implementation of LFS that follows the ``scikit-learn`` [@scikit-learn] class structure, and can therefore be used as part of a ``scikit-learn`` Pipeline like other classifiers. Open-source code, full documentation, and a demo using sample data are available at https://github.com/McMasterRS/LFSpy.git. Using LFS to train a model and test on new data is made simple with `LFSpy` and can be done in just a few lines of code. Usage follows the standard format used for `scikit-learn` classifiers. First, an LFS object is created to hold the model configuration, parameters, and once trained, the trained model itself. The implementation is flexible in that it gives the user control over a number of optional parameters, including for example, the size of the local region used for feature selection. The following training and testing functions can then be called from that object:
+
  - `lfs.fit`: trains an LFS model given training data and corresponding training labels
  - `lfs.predict`: for a trained model, outputs class label predictions given testing data
  - `lfs.score`: outputs the classification error for the testing data in total, and by class, given testing data and ground truth testing labels
@@ -94,9 +95,9 @@ The LFS method involves a number of parameters that are implemented in `LFSpy`. 
 The dependencies for `LFSpy` are as follows:
 
 * Python 3
-* `NumPy`
-* `SciPy`
-* `Scikit-learn`
+* [NumPy](https://numpy.org/)>=1.14
+* [SciPy](https://www.scipy.org/)>=1.1
+* [Scikit-learn](https://scikit-learn.org/stable/index.html)>=0.18.2
 
 # Acknowledgments
 Funding for this project was obtained through the CANARIE Research Software Program Local Support Initiative.
