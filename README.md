@@ -29,7 +29,16 @@ This will output to console whether the results of LFSpy on two datasets (the sa
 So far, LFSpy has been tested on Windows 10 with and without Conda, and on Ubuntu. In all cases, results have been exactly the expected results.
 
 ## Usage
+To use LFSpy on its own:
+```python
+from LFSpy import Local FeatureSelection
+lfs = LocalFeatureSelection()
+lfs.fit(training_data, training_labels)
+predicted_labels = lfs.predict(testing_data)
+total_error, class_error = lfs.score(testing_data, testing_labels)
+```
 
+To use LFSpy as part of an sklearn pipeline:
 ```python
 from LFS import LocalFeatureSelection
 from sklearn.pipeline import Pipeline
@@ -40,6 +49,15 @@ pipeline.fit(training_data, training_labels)
 predicted_labels = pipeline.predict(testing_data)
 total_error, class_error = pipeline.score(testing_data, testing_labels)
 ```
+
+### Tunable Parameters
+* `alpha`: (default: 19) the maximum number of selected features for each representative point
+* `gamma`: (default: 0.2) impurity level tolerance, controls proportion of out-of-class samples can be in local region
+* `tau`: (default: 2) number of passes through the training set
+* `sigma`: (default: 1) adjusts weightings for observations based on their distance, values greater than 1 result in lower weighting
+* `n_beta`: (default: 20) number of beta values to test, controls the relative weighting of intra-class vs. inter-class distance in the objective function
+* `nrrp`: (default: 2000) number of iterations for randomized rounding process
+* `knn`: (default: 1) number of nearest neighbours to compare for classification
 
 ## Authors
 *  Oliver Cook
