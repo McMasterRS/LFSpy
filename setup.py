@@ -7,7 +7,7 @@ setuptools.setup(
     name="LFSpy",
     version="1.0.9",
     author="Oliver Cook, Kiret Dhindsa, Areeb Khawaja, Ron Harwood, Thomas Mudway",
-    install_requires=['numpy>=1.14', 'scipy>=1.1', 'scikit-learn>=0.18.2'],
+    install_requires=['numpy>=1.14', 'scipy>=1.1', 'scikit-learn>=0.18.2', 'pytest>=5.0.0'],
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/McMasterRS/LFS/",
