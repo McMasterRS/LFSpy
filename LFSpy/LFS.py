@@ -29,6 +29,7 @@
 import numpy as np
 from scipy.io import loadmat
 from scipy.optimize import linprog
+from sklearn.base import BaseEstimator, ClassifierMixin
 
 WANDERING = 0
 OBSERVATIONS = 0
@@ -41,7 +42,7 @@ def distance_between(A, B, axis=None):
 # Local Feature Selection
 ###########################################
 
-class LocalFeatureSelection():
+class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
 
     def __init__(self, alpha=19, gamma=0.2, tau=2, sigma=1, n_beta=20, nrrp=2000, knn=1, rr_seed=None):
 
