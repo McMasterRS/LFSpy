@@ -30,6 +30,7 @@ import numpy as np
 from scipy.io import loadmat
 from scipy.optimize import linprog
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils.validation import check_X_y
 
 WANDERING = 0
 OBSERVATIONS = 0
@@ -66,6 +67,9 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
     ###############################################################################################
 
     def fit(self, training_data, training_labels):
+
+        X, y = check_X_y(training_data, training_labels)
+        training_data = training_data.T
 
         self.training_data = training_data
         self.training_labels = training_labels
@@ -473,44 +477,44 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
     # <- self.classification_error_total : total classification error for both classes
     ###############################################################################################
 
-    def score(self, X_test, test_labels):
-        s_class_1 = self.prediction_probabilities[1]
-        s_class_2 = self.prediction_probabilities[0]
+    # def _score(self, X_test, test_labels):
+    #     s_class_1 = self.prediction_probabilities[1]
+    #     s_class_2 = self.prediction_probabilities[0]
 
-        n_test = test_labels.shape[0]
-        er_classification = np.zeros((1, 1))
-        er_cl_s_2 = np.zeros((1, 1))
-        er_cl_s_1 = np.zeros((1, 1))
-        dc_ls_1 = np.zeros((1, 1))
-        dc_ls_2 = np.zeros((1, 1))
-        n_cls_1_test = np.sum(test_labels)
-        n_cls_2_test = n_test - n_cls_1_test
-        n = 0
+    #     n_test = test_labels.shape[0]
+    #     er_classification = np.zeros((1, 1))
+    #     er_cl_s_2 = np.zeros((1, 1))
+    #     er_cl_s_1 = np.zeros((1, 1))
+    #     dc_ls_1 = np.zeros((1, 1))
+    #     dc_ls_2 = np.zeros((1, 1))
+    #     n_cls_1_test = np.sum(test_labels)
+    #     n_cls_2_test = n_test - n_cls_1_test
+    #     n = 0
 
-        DQ0 = test_labels == 0
-        SS1 = s_class_1
-        SS2 = s_class_2
-        DQ1 = (SS1) > (SS2)
-        DQ1 = np.double(DQ1)
-        DQ1[DQ0] = 0
-        dc_ls_1[n] = np.sum(np.sum(DQ1))
-        er_cl_s_1[n] = 1 - dc_ls_1[n] / n_cls_1_test
-        er_cl_s_1[n] = er_cl_s_1[n] * 100
+    #     DQ0 = test_labels == 0
+    #     SS1 = s_class_1
+    #     SS2 = s_class_2
+    #     DQ1 = (SS1) > (SS2)
+    #     DQ1 = np.double(DQ1)
+    #     DQ1[DQ0] = 0
+    #     dc_ls_1[n] = np.sum(np.sum(DQ1))
+    #     er_cl_s_1[n] = 1 - dc_ls_1[n] / n_cls_1_test
+    #     er_cl_s_1[n] = er_cl_s_1[n] * 100
 
-        DQ0_SCZ = test_labels == 0
-        SS1_SCZ = s_class_1
-        SS2_SCZ = s_class_2
-        DQ1_SCZ = (SS1_SCZ) < (SS2_SCZ)
-        DQ1_SCZ = np.double(DQ1_SCZ)
-        DQ1_SCZ[~DQ0_SCZ] = 0
-        dc_ls_2[n] = np.sum(np.sum(DQ1_SCZ))
-        er_cl_s_2[n] = 1-dc_ls_2[n] / n_cls_2_test
-        er_cl_s_2[n] = er_cl_s_2[n] * 100
+    #     DQ0_SCZ = test_labels == 0
+    #     SS1_SCZ = s_class_1
+    #     SS2_SCZ = s_class_2
+    #     DQ1_SCZ = (SS1_SCZ) < (SS2_SCZ)
+    #     DQ1_SCZ = np.double(DQ1_SCZ)
+    #     DQ1_SCZ[~DQ0_SCZ] = 0
+    #     dc_ls_2[n] = np.sum(np.sum(DQ1_SCZ))
+    #     er_cl_s_2[n] = 1-dc_ls_2[n] / n_cls_2_test
+    #     er_cl_s_2[n] = er_cl_s_2[n] * 100
 
-        er_classification[n] = 1 - (dc_ls_1[n] + dc_ls_2[n]) / n_test
-        er_classification[n] = er_classification[n] * 100
+    #     er_classification[n] = 1 - (dc_ls_1[n] + dc_ls_2[n]) / n_test
+    #     er_classification[n] = er_classification[n] * 100
 
-        self.classification_error_total = er_classification
-        self.classification_error_breakdown = [er_cl_s_2, er_cl_s_1]
+    #     self.classification_error_total = er_classification
+    #     self.classification_error_breakdown = [er_cl_s_2, er_cl_s_1]
 
-        return self.classification_error_total, self.classification_error_breakdown
+    #     return self.classification_error_total, self.classification_error_breakdown

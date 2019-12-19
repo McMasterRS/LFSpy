@@ -55,7 +55,7 @@ def verify_output(model_out, dataset_name):
     score, y_pred = model_out
     if dataset_name is 'sample':
         print('-------------DATASET = SAMPLE-------------')
-        expected_score = 20.370370370370374
+        expected_score = 0.7962962962962963
         expected_preds = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1,
                           1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0,
                           0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -64,7 +64,7 @@ def verify_output(model_out, dataset_name):
         
     elif dataset_name is 'iris':
         print('-------------DATASET = IRIS-------------')
-        expected_score = 0.
+        expected_score = 1.
         expected_preds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                           0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                           1, 1, 1, 1, 1, 1]
@@ -94,10 +94,10 @@ def verify_output(model_out, dataset_name):
 
 def test_sample_data():
     training_data, training_labels, testing_data, testing_labels = load_dataset('sample')
-    score, y_pred = train_model(training_data, training_labels, testing_data, testing_labels)
+    score, y_pred = train_model(training_data.T, training_labels, testing_data, testing_labels)
     verify_output((score, y_pred), dataset_name='sample')
 
 def test_iris_data():
     training_data, training_labels, testing_data, testing_labels = load_dataset('iris')
-    score, y_pred = train_model(training_data.T, training_labels, testing_data.T, testing_labels)
+    score, y_pred = train_model(training_data, training_labels, testing_data.T, testing_labels)
     verify_output((score, y_pred), dataset_name='iris')
