@@ -13,7 +13,7 @@ setuptools.setup(
     url="https://github.com/McMasterRS/LFS/",
     packages=setuptools.find_packages(),
     package_data={
-        'LFSpy': ['matlab_Data.mat'],
+        'LFSpy': ['tests/matlab_Data.mat'],
         },
     classifiers=[
         "Programming Language :: Python :: 3",
