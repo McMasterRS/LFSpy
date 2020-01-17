@@ -21,6 +21,9 @@ LFS requires:
 ### Testing
 We recommend running the provided test after installing LFSpy to ensure the results obtained match expected outputs.
 
+`pytest` may be installed either directly through pip (`pip install pytest`) or using the `test`
+extra (`pip install LFSpy[test]`).
+
 ```bash
 pytest --pyargs LFSpy
 ```
