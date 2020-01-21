@@ -42,7 +42,7 @@ def train_model(x_train, y_train, x_test, y_test):
     y_pred = pipeline.predict(x_test)
     score = pipeline.score(x_test, y_test)
     
-    return score[0][0][0], y_pred
+    return score, y_pred
 
 def verify_output(model_out, dataset_name):
     '''
@@ -101,3 +101,4 @@ def test_iris_data():
     training_data, training_labels, testing_data, testing_labels = load_dataset('iris')
     score, y_pred = train_model(training_data, training_labels, testing_data.T, testing_labels)
     verify_output((score, y_pred), dataset_name='iris')
+
