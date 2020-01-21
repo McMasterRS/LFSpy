@@ -102,7 +102,26 @@ The dependencies for `LFSpy` are as follows:
 * [SciPy](https://www.scipy.org/)>=1.1
 * [Scikit-learn](https://scikit-learn.org/stable/index.html)>=0.18.2
 
+# Comparison to Other Classifiers
+A comparison of classification accuracies obtained with LFS and two standard `scikit-learn` pipelines are shown below. The Random Forest classifier (RFC) and a linear Support Vector Machine (SVM) with univariate feature selection using the F-statistic are used for comparison. Results are obtained with two sample datasets. 
+
+The first is a sample dataset used to illustrate the utility of LFS. This dataset is synthetically generated with 100 training samples and 108 test samples, x informative features and y non-informative Gaussian features. The second dataset is the Iris dataset included with `scikit-learn`, which contains 100 samples and four features (50 are used for training, and 50 are used for testing). For all tests, we use default settings, and for feature selection with the SVM, we set the number of features to 25% of the total number of available features.
+
+It can be seen that with the synthetic sample data, LFS outperforms the other two methods. For the Iris dataset, all methods perform with perfect accuracy
+
+### Classification accuracies with the sample synthetic dataset
+
+![synth_data][results_sample]
+
+### Classification accuracies with the Iris dataset
+
+![iris_data][results_iris]
+
 # Acknowledgments
 Funding for this project was obtained through the CANARIE Research Software Program Local Support Initiative.
 
 # References
+
+
+[results_sample]: https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/SampleData_Results.png
+[results_iris]: https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/IrisData_Results.png
