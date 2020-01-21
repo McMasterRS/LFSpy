@@ -94,11 +94,11 @@ def verify_output(model_out, dataset_name):
 
 def test_sample_data():
     training_data, training_labels, testing_data, testing_labels = load_dataset('sample')
-    score, y_pred = train_model(training_data.T, training_labels, testing_data, testing_labels)
+    score, y_pred = train_model(training_data.T, training_labels, testing_data.T, testing_labels)
     verify_output((score, y_pred), dataset_name='sample')
 
 def test_iris_data():
     training_data, training_labels, testing_data, testing_labels = load_dataset('iris')
-    score, y_pred = train_model(training_data, training_labels, testing_data.T, testing_labels)
+    score, y_pred = train_model(training_data, training_labels, testing_data, testing_labels)
     verify_output((score, y_pred), dataset_name='iris')
 

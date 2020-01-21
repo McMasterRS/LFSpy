@@ -265,6 +265,8 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
     ###############################################################################################
 
     def predict(self, testing_data):
+
+        testing_data = testing_data.T
         SClass1, SClass2 = self.classification(testing_data)
         self.prediction_probabilities = [SClass2, SClass1]
         self.prediction = (SClass1 > SClass2).astype(int)
