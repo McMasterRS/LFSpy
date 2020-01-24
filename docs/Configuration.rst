@@ -1,6 +1,8 @@
 Configuration
 =================================
 
+The localized feature selection method has a set of user configurable paramaters that can be tweaked to get your desired functionality. For a full description of each parameter refer to the paperslisted in the cirations section. The parameters are:
+
 * alpha: (default: 19) the maximum number of selected features for each representative point
 
 * gamma: (default: 0.2) impurity level tolerance, controls proportion of out-of-class samples can be in local region
