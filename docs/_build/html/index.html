@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to LFSpy’s documentation! &mdash; LFSpy  documentation</title>
+  <title>LFSpy &mdash; LFSpy  documentation</title>
   
 
   
@@ -34,7 +34,8 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Introduction" href="Introduction.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -78,18 +79,21 @@
               
             
             
-              <!-- Local TOC -->
-              <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">Welcome to LFSpy’s documentation!</a></li>
-<li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#dependancies">Dependancies</a></li>
-<li><a class="reference internal" href="#testing">Testing</a></li>
-<li><a class="reference internal" href="#usage">Usage</a></li>
-<li><a class="reference internal" href="#authors">Authors</a></li>
-<li><a class="reference internal" href="#acknowledgments">Acknowledgments</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scikit-learn Compatability.html">scikit-learn Compatability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Functionality.html">Functionality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Community Guidelines.html">Community Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LFS method.html">Localized Feature Selection Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Citations.html">Citations</a></li>
 </ul>
-</div>
+
             
           
         </div>
@@ -133,7 +137,7 @@
     
       <li><a href="#">Docs</a> &raquo;</li>
         
-      <li>Welcome to LFSpy’s documentation!</li>
+      <li>LFSpy</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -152,50 +156,76 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="welcome-to-lfspy-s-documentation">
-<h1>Welcome to LFSpy’s documentation!<a class="headerlink" href="#welcome-to-lfspy-s-documentation" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="lfspy">
+<h1>LFSpy<a class="headerlink" href="#lfspy" title="Permalink to this headline">¶</a></h1>
 <p>Localized feature selection (LFS) is a supervised machine learning approach for embedding localized feature selection in classification. The sample space is partitioned into overlapping regions, and subsets of features are selected that are optimal for classification within each local region. As the size and membership of the feature subsets can vary across regions, LFS is able to adapt to local variation across the entire sample space.</p>
 <p>This repository contains a python implementation of this method that is compatible with scikit-learn pipelines. For a Matlab version, refer to <a class="reference external" href="https://github.com/armanfn/LFS">https://github.com/armanfn/LFS</a></p>
-</div>
+<p>The LFS approach was developed by Nargus Armanfard. For further information please refer to:</p>
+<ul class="simple">
+<li><ol class="upperalpha simple" start="14">
+<li><p>Armanfard, JP. Reilly, and M. Komeili, “Local Feature Selection for Data Classification”, IEEE Trans. on Pattern Analysis and Machine Intelligence, vol. 38, no. 6, pp. 1217-1227, 2016.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="14">
+<li><p>Armanfard, JP. Reilly, and M. Komeili, “Logistic Localized Modeling of the Sample Space for Feature Selection and Classification”, IEEE Transactions on Neural Networks and Learning Systems, vol. 29, no. 5, pp. 1396-1413, 2018</p></li>
+</ol>
+</li>
+</ul>
 <div class="section" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>pip install lfspy</p>
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>LFSpy is available on the pypy distribution platform at <a class="reference external" href="https://pypi.org/project/LFSpy/">https://pypi.org/project/LFSpy/</a>.</p>
+<p>To install LFSpy along with its dependacies run the command::</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">lfspy</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="dependancies">
-<h1>Dependancies<a class="headerlink" href="#dependancies" title="Permalink to this headline">¶</a></h1>
+<h2>Dependancies<a class="headerlink" href="#dependancies" title="Permalink to this headline">¶</a></h2>
 <p>LFS requires:</p>
-<p>Python 3
-NumPy&gt;=1.14
-SciPy&gt;=1.1
-Scikit-learn&gt;=0.18.2
-pytest&gt;=5.0.0</p>
+<ul class="simple">
+<li><p>Python 3</p></li>
+<li><p>NumPy&gt;=1.14</p></li>
+<li><p>SciPy&gt;=1.1</p></li>
+<li><p>Scikit-learn&gt;=0.18.2</p></li>
+<li><p>pytest&gt;=5.0.0</p></li>
+</ul>
 </div>
 <div class="section" id="testing">
-<h1>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h1>
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
 <p>We recommend running the provided test after installing LFSpy to ensure the results obtained match expected outputs.</p>
-<p>pytest may be installed either directly through pip (pip install pytest) or using the test extra (pip install LFSpy[test]).</p>
-<p>pytest –pyargs LFSpy
-This will output to console whether or not the results of LFSpy on two datasets (the sample dataset provided in this repository, and scikit-learn’s Fisher Iris dataset) are exactly as expected.</p>
+<p>pytest may be installed either directly through pip (pip install pytest) or using the test extra (pip install LFSpy[test]).:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pytest</span> <span class="o">--</span><span class="n">pyargs</span> <span class="n">LFSpy</span>
+</pre></div>
+</div>
+<p>This will output to console whether or not the results of LFSpy on two datasets (the sample dataset provided in this repository, and scikit-learn’s Fisher Iris dataset) are exactly as expected.</p>
 <p>So far, LFSpy has been tested on Windows 10 with and without Conda, and on Ubuntu. In all cases, results have been exactly the expected results.</p>
 </div>
 <div class="section" id="usage">
-<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p>To use LFSpy on its own:</p>
-<p>from LFSpy import LocalFeatureSelection</p>
-<p>lfs = LocalFeatureSelection()
-lfs.fit(training_data, training_labels)
-predicted_labels = lfs.predict(testing_data)
-total_error, class_error = lfs.score(testing_data, testing_labels)
-To use LFSpy as part of an sklearn pipeline:</p>
-<p>from LFS import LocalFeatureSelection
-from sklearn.pipeline import Pipeline</p>
-<p>lfs = LocalFeatureSelection()
-pipeline = Pipeline([(‘lfs’, lfs)])
-pipeline.fit(training_data, training_labels)
-predicted_labels = pipeline.predict(testing_data)
-total_error, class_error = pipeline.score(testing_data, testing_labels)
-Tunable Parameters
-alpha: (default: 19) the maximum number of selected features for each representative point
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">LFSpy</span> <span class="k">import</span> <span class="n">LocalFeatureSelection</span>
+
+<span class="n">lfs</span> <span class="o">=</span> <span class="n">LocalFeatureSelection</span><span class="p">()</span>
+<span class="n">lfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">training_data</span><span class="p">,</span> <span class="n">training_labels</span><span class="p">)</span>
+<span class="n">predicted_labels</span> <span class="o">=</span> <span class="n">lfs</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">testing_data</span><span class="p">)</span>
+<span class="n">total_error</span><span class="p">,</span> <span class="n">class_error</span> <span class="o">=</span> <span class="n">lfs</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">testing_data</span><span class="p">,</span> <span class="n">testing_labels</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To use LFSpy as part of an sklearn pipeline:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">LFS</span> <span class="k">import</span> <span class="n">LocalFeatureSelection</span>
+<span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="k">import</span> <span class="n">Pipeline</span>
+
+<span class="n">lfs</span> <span class="o">=</span> <span class="n">LocalFeatureSelection</span><span class="p">()</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">([(</span><span class="s1">&#39;lfs&#39;</span><span class="p">,</span> <span class="n">lfs</span><span class="p">)])</span>
+<span class="n">pipeline</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">training_data</span><span class="p">,</span> <span class="n">training_labels</span><span class="p">)</span>
+<span class="n">predicted_labels</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">testing_data</span><span class="p">)</span>
+<span class="n">total_error</span><span class="p">,</span> <span class="n">class_error</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">testing_data</span><span class="p">,</span> <span class="n">testing_labels</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tunable-parameters">
+<h2>Tunable Parameters<a class="headerlink" href="#tunable-parameters" title="Permalink to this headline">¶</a></h2>
+<p>alpha: (default: 19) the maximum number of selected features for each representative point
 gamma: (default: 0.2) impurity level tolerance, controls proportion of out-of-class samples can be in local region
 tau: (default: 2) number of passes through the training set
 sigma: (default: 1) adjusts weightings for observations based on their distance, values greater than 1 result in lower weighting
@@ -204,7 +234,7 @@ nrrp: (default: 2000) number of iterations for randomized rounding process
 knn: (default: 1) number of nearest neighbours to compare for classification</p>
 </div>
 <div class="section" id="authors">
-<h1>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h1>
+<h2>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h2>
 <p>Oliver Cook
 Kiret Dhindsa
 Areeb Khawajaby
@@ -212,19 +242,41 @@ Ron Harwood
 Thomas Mudway</p>
 </div>
 <div class="section" id="acknowledgments">
-<h1>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permalink to this headline">¶</a></h1>
+<h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permalink to this headline">¶</a></h2>
 <p>N. Armanfard, JP. Reilly, and M. Komeili, “Local Feature Selection for Data Classification”, IEEE Trans. on Pattern Analysis and Machine Intelligence, vol. 38, no. 6, pp. 1217-1227, 2016.
 N. Armanfard, JP. Reilly, and M. Komeili, “Logistic Localized Modeling of the Sample Space for Feature Selection and Classification”, IEEE Transactions on Neural Networks and Learning Systems, vol. 29, no. 5, pp. 1396-1413, 2018.</p>
 <div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Installation.html#dependancies">Dependancies</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scikit-learn Compatability.html">scikit-learn Compatability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Functionality.html">Functionality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Community Guidelines.html">Community Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LFS method.html">Localized Feature Selection Method</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="LFS method.html#feature-selection">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LFS method.html#class-similarity-measurement">Class Similarity Measurement</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Citations.html">Citations</a></li>
+</ul>
 </div>
 </div>
 <div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
+</div>
 </div>
 
 
@@ -232,6 +284,13 @@ N. Armanfard, JP. Reilly, and M. Komeili, “Logistic Localized Modeling of the 
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Introduction.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
   
 
   <hr/>
