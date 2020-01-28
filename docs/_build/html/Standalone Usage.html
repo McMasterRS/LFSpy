@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Localized Feature Selection Method &mdash; LFSpy  documentation</title>
+  <title>Usage &mdash; LFSpy  documentation</title>
   
 
   
@@ -35,8 +35,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Citations" href="Citations.html" />
-    <link rel="prev" title="Community Guidelines" href="Community Guidelines.html" /> 
+    <link rel="next" title="scikit-learn Compatability" href="scikit-learn Compatability.html" />
+    <link rel="prev" title="Configuration" href="Configuration.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,22 +85,12 @@
 <li class="toctree-l1"><a class="reference internal" href="Introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scikit-learn Compatability.html">scikit-learn Compatability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Functionality.html">Functionality</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Community Guidelines.html">Community Guidelines</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Localized Feature Selection Method</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#feature-selection">Feature Selection</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#problem-definition">Problem Definition</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#optimization-process">Optimization Process</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#determination-of-the-parameters-of-g">Determination of the Parameters of G(·)</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#class-similarity-measurement">Class Similarity Measurement</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Community Guidelines.html">Contribution Guidelines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Citations.html">Citations</a></li>
 </ul>
 
@@ -147,13 +137,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Localized Feature Selection Method</li>
+      <li>Usage</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/LFS method.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/Standalone Usage.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -166,22 +156,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="localized-feature-selection-method">
-<h1>Localized Feature Selection Method<a class="headerlink" href="#localized-feature-selection-method" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="feature-selection">
-<h2>Feature Selection<a class="headerlink" href="#feature-selection" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="problem-definition">
-<h3>Problem Definition<a class="headerlink" href="#problem-definition" title="Permalink to this headline">¶</a></h3>
-</div>
-<div class="section" id="optimization-process">
-<h3>Optimization Process<a class="headerlink" href="#optimization-process" title="Permalink to this headline">¶</a></h3>
-</div>
-<div class="section" id="determination-of-the-parameters-of-g">
-<h3>Determination of the Parameters of G(·)<a class="headerlink" href="#determination-of-the-parameters-of-g" title="Permalink to this headline">¶</a></h3>
-</div>
-</div>
-<div class="section" id="class-similarity-measurement">
-<h2>Class Similarity Measurement<a class="headerlink" href="#class-similarity-measurement" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<p>To use LFSpy on its own:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">LFSpy</span> <span class="k">import</span> <span class="n">LocalFeatureSelection</span>
+
+<span class="n">lfs</span> <span class="o">=</span> <span class="n">LocalFeatureSelection</span><span class="p">()</span>
+<span class="n">lfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">training_data</span><span class="p">,</span> <span class="n">training_labels</span><span class="p">)</span>
+<span class="n">predicted_labels</span> <span class="o">=</span> <span class="n">lfs</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">testing_data</span><span class="p">)</span>
+<span class="n">total_error</span><span class="p">,</span> <span class="n">class_error</span> <span class="o">=</span> <span class="n">lfs</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">testing_data</span><span class="p">,</span> <span class="n">testing_labels</span><span class="p">)</span>
+</pre></div>
 </div>
 </div>
 
@@ -193,10 +177,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Citations.html" class="btn btn-neutral float-right" title="Citations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="scikit-learn Compatability.html" class="btn btn-neutral float-right" title="scikit-learn Compatability" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Community Guidelines.html" class="btn btn-neutral float-left" title="Community Guidelines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Configuration.html" class="btn btn-neutral float-left" title="Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

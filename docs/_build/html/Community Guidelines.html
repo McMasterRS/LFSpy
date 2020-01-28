@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Community Guidelines &mdash; LFSpy  documentation</title>
+  <title>Contribution Guidelines &mdash; LFSpy  documentation</title>
   
 
   
@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Localized Feature Selection Method" href="LFS method.html" />
+    <link rel="next" title="Citations" href="Citations.html" />
     <link rel="prev" title="Examples" href="Examples.html" /> 
 </head>
 
@@ -85,13 +85,17 @@
 <li class="toctree-l1"><a class="reference internal" href="Introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Standalone Usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scikit-learn Compatability.html">scikit-learn Compatability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Functionality.html">Functionality</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Community Guidelines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="LFS method.html">Localized Feature Selection Method</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Contribution Guidelines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#contributing-to-the-method">Contributing to the method:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coding-standards">Coding Standards:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#submitting-a-pull-request">Submitting a Pull Request</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Citations.html">Citations</a></li>
 </ul>
 
@@ -138,7 +142,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Community Guidelines</li>
+      <li>Contribution Guidelines</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -157,9 +161,27 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="community-guidelines">
-<h1>Community Guidelines<a class="headerlink" href="#community-guidelines" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="contribution-guidelines">
+<h1>Contribution Guidelines<a class="headerlink" href="#contribution-guidelines" title="Permalink to this headline">¶</a></h1>
 <p>Contributions are welcomed and can be made to the public Git repository available at: <a class="reference external" href="https://github.com/McMasterRS/LFSpy">https://github.com/McMasterRS/LFSpy</a></p>
+<p>We encourage anyone looking to contribute to consult the open issues available at <a class="reference external" href="https://github.com/McMasterRS/LFSpy/issues">https://github.com/McMasterRS/LFSpy/issues</a></p>
+<p>We ask that in submitting changes you consult the coding standards and pull request guidelines outlined below.</p>
+<div class="section" id="contributing-to-the-method">
+<h2>Contributing to the method:<a class="headerlink" href="#contributing-to-the-method" title="Permalink to this headline">¶</a></h2>
+<p>This library impliments the Localized Feature Selection method outlined by Nargus Armenford. As such, changes made the method should be only done to reflect changes made to the theoretical basis.</p>
+</div>
+<div class="section" id="coding-standards">
+<h2>Coding Standards:<a class="headerlink" href="#coding-standards" title="Permalink to this headline">¶</a></h2>
+<p>In general the code should be written according to the PEP 8 style standard for code and documentation. A guide to PEP8 can be found at <a class="reference external" href="https://www.python.org/dev/peps/pep-0008/">https://www.python.org/dev/peps/pep-0008/</a></p>
+</div>
+<div class="section" id="submitting-a-pull-request">
+<h2>Submitting a Pull Request<a class="headerlink" href="#submitting-a-pull-request" title="Permalink to this headline">¶</a></h2>
+<p>Please submit one pull request per feature. Before submitting a pull request ensure your code continues to pass the unit tests. LFSpy uses pytest and the tests are located in the tests directory of this repository.</p>
+<p>The tests can be run using the command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pytest</span> <span class="o">--</span><span class="n">pyargs</span> <span class="n">LFSpy</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -170,7 +192,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="LFS method.html" class="btn btn-neutral float-right" title="Localized Feature Selection Method" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Citations.html" class="btn btn-neutral float-right" title="Citations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="Examples.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

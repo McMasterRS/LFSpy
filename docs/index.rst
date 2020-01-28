@@ -106,13 +106,12 @@ N. Armanfard, JP. Reilly, and M. Komeili, "Logistic Localized Modeling of the Sa
    Introduction
    Installation
    Configuration
-   Usage
+   Standalone Usage
    scikit-learn Compatability
    Testing
    Functionality
    Examples
    Community Guidelines
-   LFS method
    Citations
 
 
