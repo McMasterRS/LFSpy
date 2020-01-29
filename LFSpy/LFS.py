@@ -17,7 +17,7 @@
 #            Para.NRRP:   number of iterations for randomized rounding process (defaul 2000).
 # OUTPUT:
 #        fstar (M by N):  selected features for each representative point; if fstar(i,j)=1, jth feature is selected for ith representative point.
-#        fstarLin (M by N): it is fstar before applying randomized rounding process.
+#        fstarLin (M by N): it is fstar before applying randomized wandering process.
 #        ErCls1: it is the classification error (in percent) associated to the input test points with class label 1.
 #        ErCls2: it is the classification error (in percent) associated to the input test points with class label 0.
 #        ErClassification: it is the total error (in percent) for the entire input test points.

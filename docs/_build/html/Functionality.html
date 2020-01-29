@@ -88,7 +88,10 @@
 <li class="toctree-l1"><a class="reference internal" href="Standalone Usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scikit-learn Compatability.html">scikit-learn Compatability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Testing.html">Testing</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Functionality</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Functionality</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#methods">Methods</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Community Guidelines.html">Contribution Guidelines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Citations.html">Citations</a></li>
@@ -158,7 +161,180 @@
             
   <div class="section" id="functionality">
 <h1>Functionality<a class="headerlink" href="#functionality" title="Permalink to this headline">¶</a></h1>
-<p>TODO</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">LocalFeatureSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">19</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_beta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nrrp</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">knn</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rr_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 83%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Parameters</strong></p></td>
+<td><dl class="simple">
+<dt><strong>alpha : integer, optional, default 19</strong></dt><dd><p>maximum number of selected features for each representative sample</p>
+</dd>
+<dt><strong>gamma : integer, optional, default 0.2</strong></dt><dd><p>impurity level</p>
+</dd>
+<dt><strong>tau : integer, optional, default 2</strong></dt><dd><p>number of iterations</p>
+</dd>
+<dt><strong>sigma : integer, optional, default 1</strong></dt><dd><p>controls neighboring samples weighting</p>
+</dd>
+<dt><strong>n_beta : integer, optional, default 20</strong></dt><dd><p>number of distinct beta</p>
+</dd>
+<dt><strong>nrrp : integer, optional, default 2000</strong></dt><dd><p>number of iterations for randomized wandering process</p>
+</dd>
+<dt><strong>knn : integer, optional, default 1</strong></dt><dd><p>k nearest neighbours</p>
+</dd>
+<dt><strong>rr_seed : integer, optional, default None</strong></dt><dd><p>seed value for random wandering process</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><p><strong>Attributes</strong></p></td>
+<td><dl class="simple">
+<dt><strong>fstar : array of shape (n_features, n_features)</strong></dt><dd><p>selected features for each sample</p>
+</dd>
+<dt><strong>fstar_lin : array of shape (n_features, n_features)</strong></dt><dd><p>fstar before applying randomized wandering process</p>
+</dd>
+<dt><strong>training_data : array of shape (n_features, n_samples</strong></dt><dd><p>The set of M by N features and observations the model was trained on</p>
+</dd>
+<dt><strong>training_labels : array of shape (n_samples)</strong></dt><dd><p>The set of N class labels the model was trained on</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="methods">
+<h2>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 70%" />
+<col style="width: 30%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>fit(self, training_data, training_labels)</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>predict(self, testing_data)</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>classification(self, testing_data)</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>class_sim_m(self, test, N, patterns, targets, fstar)</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">19</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_beta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nrrp</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">knn</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rr_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Initialize self</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_data</span><span class="p">,</span> <span class="n">training_labels</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Fit model</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Parameters</strong></p></td>
+<td><dl class="simple">
+<dt>training_data<span class="classifier">{array-like} of shape (n_samples, m_features)</span></dt><dd><p>Training data</p>
+</dd>
+<dt>training_labels<span class="classifier">{array-like} of shape (n_samples)</span></dt><dd><p>Class labels for each sample</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><p><strong>Returns</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">testing_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Predict using the model</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Parameters</strong></p></td>
+<td><dl class="simple">
+<dt>testing_data<span class="classifier">{array-like} of shape (n_samples, m_features)</span></dt><dd><p>Testing data</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><p><strong>Returns</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">classification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">testing_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Internal feature classification function, called by predict function</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Parameters</strong></p></td>
+<td><dl class="simple">
+<dt>testing_data<span class="classifier">{array-like} of shape (n_samples, m_features)</span></dt><dd><p>Testing data</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><p><strong>Returns</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">class_sim_m</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">patterns</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">fstar</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">knn</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Internal feature classification function, called by classification function</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Parameters</strong></p></td>
+<td><dl class="simple">
+<dt>test<span class="classifier">{array-like} of shape (n_samples, m_features)</span></dt><dd><p>Testing data</p>
+</dd>
+<dt>N: {integer}</dt><dd><p>Number of features</p>
+</dd>
+<dt>patterns:</dt><dd><p>Data the model was trained on</p>
+</dd>
+<dt>targets:</dt><dd><p>Class Labels the model was trained on</p>
+</dd>
+<dt>fstar:</dt><dd><p>Selected features for each samples</p>
+</dd>
+<dt>gamma:</dt><dd><p>Impurity Level</p>
+</dd>
+<dt>knn:</dt><dd><p>K nearest neighbours</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><p><strong>Returns</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 
 
