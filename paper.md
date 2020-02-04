@@ -111,7 +111,7 @@ It can be seen that with the synthetic sample data, LFS outperforms the other tw
 
 ### Classification accuracies with the sample synthetic dataset
 
-![synth_data][results_sample]
+![synth_data][results_sample =256x256]
 
 ### Classification accuracies with the Iris dataset
 
@@ -123,5 +123,5 @@ Funding for this project was obtained through the CANARIE Research Software Prog
 # References
 
 
-[results_sample]:(https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/SampleData_Results.png =256x256)
+[results_sample]:https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/SampleData_Results.png
 [results_iris]: https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/IrisData_Results.png
