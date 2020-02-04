@@ -70,6 +70,30 @@ total_error, class_error = pipeline.score(testing_data, testing_labels)
 * `nrrp`: (default: 2000) number of iterations for randomized rounding process
 * `knn`: (default: 1) number of nearest neighbours to compare for classification
 
+### Example
+This example uses the sample data ([matlab_Data.mat](https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/tests/matlab_Data.mat)) available in the [LFSpy/tests](https://github.com/McMasterRS/LFSpy/tree/master/LFSpy/tests) folder. The full example can be found in [example.py](https://github.com/McMasterRS/LFSpy/blob/master/example.py). On our test system, the fnial output prints the statement, "LFS test accuracy: 0.7962962962962963".
+
+'''
+import numpy as np
+from scipy.io import loadmat
+from LFSpy import LocalFeatureSelection
+from sklearn.pipeline import Pipeline
+
+mat = loadmat('LFSpy/tests/matlab_Data')
+x_train = mat['Train'].T
+y_train = mat['TrainLables'][0]
+x_test = mat['Test'].T
+y_test = mat['TestLables'][0]
+        
+print('Training and testing an LFS model with default parameters.\nThis may take a few minutes...')
+lfs = LocalFeatureSelection(rr_seed=777)
+pipeline = Pipeline([('classifier', lfs)])
+pipeline.fit(x_train, y_train)
+y_pred = pipeline.predict(x_test)
+score = pipeline.score(x_test, y_test)
+print('LFS test accuracy: {}'.format(score))
+'''
+
 ## Authors
 *  Oliver Cook
 *  Kiret Dhindsa
