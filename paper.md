@@ -123,5 +123,5 @@ Funding for this project was obtained through the CANARIE Research Software Prog
 # References
 
 
-[results_sample]: https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/SampleData_Results.png
+[results_sample]:(https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/SampleData_Results.png =256x)
 [results_iris]: https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/IrisData_Results.png
