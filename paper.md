@@ -111,7 +111,7 @@ It can be seen that with the synthetic sample data, LFS outperforms the other tw
 
 ### Classification accuracies with the sample synthetic dataset
 
-![synth_data][results_sample =256x256]
+![synth_data](results_sample =256x256)
 
 ### Classification accuracies with the Iris dataset
 
