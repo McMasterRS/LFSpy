@@ -6,6 +6,10 @@ Localized feature selection (LFS) is a supervised machine learning approach for 
 
 This repository contains a python implementation of this method that is compatible with scikit-learn pipelines. For a Matlab version, refer to [https://github.com/armanfn/LFS](https://github.com/armanfn/LFS)
 
+### Statement of Need
+
+LFSpy offers an implementation of the Local Feature Selection (LFS) algorithm that is compatible with scikit-learn, one of the most widely used machine learning packages today. LFS combines classification with feature selection, and distinguishes itself by it flexibility in selecting a different subset of features for different data points based on what is most discriminative in local regions of the feature space. This means LFS overcomes a well-known weakness of many classification algorithms, i.e., classification for non-stationary data where the number of features is high relative to the number of samples. 
+
 ## Installation
 
 ```bash
@@ -65,6 +69,30 @@ total_error, class_error = pipeline.score(testing_data, testing_labels)
 * `n_beta`: (default: 20) number of beta values to test, controls the relative weighting of intra-class vs. inter-class distance in the objective function
 * `nrrp`: (default: 2000) number of iterations for randomized rounding process
 * `knn`: (default: 1) number of nearest neighbours to compare for classification
+
+### Example
+This example uses the sample data ([matlab_Data.mat](https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/tests/matlab_Data.mat)) available in the [LFSpy/tests](https://github.com/McMasterRS/LFSpy/tree/master/LFSpy/tests) folder. The full example can be found in [example.py](https://github.com/McMasterRS/LFSpy/blob/master/example.py). On our test system, the fnial output prints the statement, "LFS test accuracy: 0.7962962962962963".
+
+```python
+import numpy as np
+from scipy.io import loadmat
+from LFSpy import LocalFeatureSelection
+from sklearn.pipeline import Pipeline
+
+mat = loadmat('LFSpy/tests/matlab_Data')
+x_train = mat['Train'].T
+y_train = mat['TrainLables'][0]
+x_test = mat['Test'].T
+y_test = mat['TestLables'][0]
+        
+print('Training and testing an LFS model with default parameters.\nThis may take a few minutes...')
+lfs = LocalFeatureSelection(rr_seed=777)
+pipeline = Pipeline([('classifier', lfs)])
+pipeline.fit(x_train, y_train)
+y_pred = pipeline.predict(x_test)
+score = pipeline.score(x_test, y_test)
+print('LFS test accuracy: {}'.format(score))
+```
 
 ## Authors
 *  Oliver Cook
