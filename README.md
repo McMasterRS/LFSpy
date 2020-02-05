@@ -73,6 +73,8 @@ total_error, class_error = pipeline.score(testing_data, testing_labels)
 ### Example
 This example uses the sample data ([matlab_Data.mat](https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/tests/matlab_Data.mat)) available in the [LFSpy/tests](https://github.com/McMasterRS/LFSpy/tree/master/LFSpy/tests) folder. The full example can be found in [example.py](https://github.com/McMasterRS/LFSpy/blob/master/example.py). On our test system, the fnial output prints the statement, "LFS test accuracy: 0.7962962962962963".
 
+The code provided in [comparisons.py]{https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/comparisons.py) serve as additional examples of how to use LFSpy.
+
 ```python
 import numpy as np
 from scipy.io import loadmat
