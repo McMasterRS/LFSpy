@@ -158,7 +158,32 @@
             
   <div class="section" id="examples">
 <h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
-<p>TODO</p>
+<p>Given here is an example demonstration of localized feature selection and LFSpy for feature selection and classification using the common Iris flower data set.</p>
+<p>For installation instructions please refer to the “Installation” section.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.io</span> <span class="k">import</span> <span class="n">loadmat</span>
+<span class="kn">from</span> <span class="nn">LFSpy</span> <span class="k">import</span> <span class="n">LocalFeatureSelection</span>
+<span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="k">import</span> <span class="n">Pipeline</span>
+
+<span class="c1"># Loads the sample dataset</span>
+<span class="n">mat</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="s1">&#39;LFSpy/tests/matlab_Data&#39;</span><span class="p">)</span>
+<span class="n">x_train</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="s1">&#39;Train&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+<span class="n">y_train</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="s1">&#39;TrainLables&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">x_test</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="s1">&#39;Test&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+<span class="n">y_test</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="s1">&#39;TestLables&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="c1">#Trains an tests and LFS model using default parameters on the given dataset.</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Training and testing an LFS model with default parameters.</span><span class="se">\n</span><span class="s1">This may take a few minutes...&#39;</span><span class="p">)</span>
+<span class="n">lfs</span> <span class="o">=</span> <span class="n">LocalFeatureSelection</span><span class="p">(</span><span class="n">rr_seed</span><span class="o">=</span><span class="mi">777</span><span class="p">)</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">([(</span><span class="s1">&#39;classifier&#39;</span><span class="p">,</span> <span class="n">lfs</span><span class="p">)])</span>
+<span class="n">pipeline</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+<span class="n">score</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;LFS test accuracy: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">score</span><span class="p">))</span>
+<span class="c1"># On our test system, running this code prints the following: LFS test accuracy: 0.7962962962962963</span>
+</pre></div>
+</div>
 </div>
 
 
