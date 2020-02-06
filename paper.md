@@ -116,7 +116,8 @@ It can be seen that with both datasets LFS outperforms the other two methods, pa
 
 ### Classification accuracies with the Iris dataset
 
-![iris_data][results_iris]
+<!-- ![iris_data][results_iris] -->
+<img src="https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/IrisData_Results.png" width="512" height="512">
 
 # Acknowledgments
 Funding for this project was obtained through the CANARIE Research Software Program Local Support Initiative.
