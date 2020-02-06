@@ -55,17 +55,19 @@ Local feature selection is performed by promoting class-wise clustering in the n
 
 Given training and testing data that are compatible with `scikit-learn` models, a typical example of model training and testing is as follows:
 
-    from LFSpy import LocalFeatureSelection
-    lfs = LocalFeatureSelection(alpha=19, 
-                                gamma=0.2, 
-                                tau=2, 
-                                sigma=1, 
-                                n_beta=20, 
-                                nrrp=2000, 
-                                knn=1)
-    lfs.fit(training_data, training_labels)
-    predicted_labels = lfs.predict(testing_data)
-    total_error, class_error = lfs.score(testing_data, testing_labels)
+```python
+from LFSpy import LocalFeatureSelection
+lfs = LocalFeatureSelection(alpha=19, 
+                            gamma=0.2, 
+                            tau=2, 
+                            sigma=1, 
+                            n_beta=20, 
+                            nrrp=2000, 
+                            knn=1)
+lfs.fit(training_data, training_labels)
+predicted_labels = lfs.predict(testing_data)
+total_error, class_error = lfs.score(testing_data, testing_labels)
+```
 
 `LFSpy` is also fully compatible with the `scikit-learn` Pipeline method:
 
