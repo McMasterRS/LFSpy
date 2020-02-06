@@ -17,7 +17,7 @@ authors:
     orcid: 0000-0001-6213-2111
     affiliation: "1"
  -  name: Areeb Khawaja
-    orcid: 00000-0003-4528-9146
+    orcid: 0000-0003-4528-9146
     affiliation: "1"
  -  name: Ron Harwood
     orcid: 0000-0002-7922-0641
