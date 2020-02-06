@@ -17,7 +17,7 @@ def load_dataset(name, m=0):
     '''
     print('Loading dataset ' + name + '...')
     if name is 'sample':
-        mat = loadmat('LFSpy/tests/matlab_Data')
+        mat = loadmat('matlab_Data')
         training_data = mat['Train'].T
         training_labels = mat['TrainLables'][0]
         testing_data = mat['Test'].T
@@ -119,31 +119,32 @@ plotScores(scores_iris, 'Iris Data Classification Accuracies')
 
 
 # %% Compare across number of noise variables on Iris dataset
-Score_LFS = []
+#Score_LFS = []
 Score_SVM = []
 Score_RFC = []
 mlist = np.arange(0, 1001, 25)
 for m in mlist:
     training_data, training_labels, testing_data, testing_labels = load_dataset('iris', m=m)
     
-    s1, _ = results_lfspy(training_data, training_labels, testing_data, testing_labels)
+#    s1, _ = results_lfspy(training_data, training_labels, testing_data, testing_labels)
     s2, _ = results_rforest(training_data, training_labels, testing_data, testing_labels)
     s3, _ = results_fsvm(training_data, training_labels, testing_data, testing_labels)
     
-    Score_LFS.append(s1)
+#    Score_LFS.append(s1)
     Score_RFC.append(s2)
     Score_SVM.append(s3)
 
-# Plot the resulst
+# Plot the results
 plt.figure()
 plt.plot(mlist, Score_LFS)
 plt.plot(mlist, Score_RFC)
 plt.plot(mlist, Score_SVM)
-
+plt.vlines(100, 0, 1.2, linestyles='dashed')
 plt.ylim([0,1.2]) 
+
 #plt.xlabel('Number of Noise Features')
 plt.title('Classification Accuracy by Number of Added Noise Variables', fontsize=14)
-plt.legend(['Random Forest','SVM'])
+plt.legend(['LFS','Random Forest','SVM'], loc='lower right')
 plt.savefig('IrisData_noise_Results.png', bbox_inches='tight', pad_inches=0.1, dpi=300)
 
 
