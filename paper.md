@@ -111,7 +111,8 @@ It can be seen that with both datasets LFS outperforms the other two methods, pa
 
 ### Classification accuracies with the sample synthetic dataset
 
-![synth_data][results_sample]
+<!-- ![synth_data][results_sample] -->
+![synth_data](https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/SampleData_Results.png)
 
 ### Classification accuracies with the Iris dataset
 
