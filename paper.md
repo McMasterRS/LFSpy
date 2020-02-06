@@ -71,19 +71,21 @@ total_error, class_error = lfs.score(testing_data, testing_labels)
 
 `LFSpy` is also fully compatible with the `scikit-learn` Pipeline method:
 
-    from LFSpy import LocalFeatureSelection
-    from sklearn.pipeline import Pipeline
-    lfs = LocalFeatureSelection(alpha=19, 
-                                gamma=0.2, 
-                                tau=2, 
-                                sigma=1, 
-                                n_beta=20, 
-                                nrrp=2000, 
-                                knn=1)
-    pipeline = Pipeline([('lfs', lfs)])
-    pipeline.fit(training_data, training_labels)
-    predicted_labels = pipeline.predict(testing_data)
-    total_error, class_error = pipeline.score(testing_data, testing_labels)
+```python
+from LFSpy import LocalFeatureSelection
+from sklearn.pipeline import Pipeline
+lfs = LocalFeatureSelection(alpha=19, 
+                            gamma=0.2, 
+                            tau=2, 
+                            sigma=1, 
+                            n_beta=20, 
+                            nrrp=2000, 
+                            knn=1)
+pipeline = Pipeline([('lfs', lfs)])
+pipeline.fit(training_data, training_labels)
+predicted_labels = pipeline.predict(testing_data)
+total_error, class_error = pipeline.score(testing_data, testing_labels)
+```
 
 <!---
 The LFS method involves a number of parameters that are implemented in `LFSpy`. Their definitions are given as follows:
@@ -126,6 +128,7 @@ Funding for this project was obtained through the CANARIE Research Software Prog
 
 # References
 
-
+<!--
 [results_sample]: https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/SampleData_Results.png
 [results_iris]: https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/IrisData_Results.png
+-->
