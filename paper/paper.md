@@ -119,7 +119,7 @@ It can be seen that with both datasets LFS outperforms the other two methods, pa
 
 ### Classification accuracies with the Iris dataset
 
-![Comparison of classification accuracies obtained with different classifiers and increasing numbers of non-informative features using the Fisher Iris dataset available in `scikit-learn`](IrisData_Results.png)
+![Comparison of classification accuracies obtained with different classifiers and increasing numbers of non-informative features using the Fisher Iris dataset available in `scikit-learn`.](IrisData_Results.png)
 
 # Acknowledgments
 Funding for this project was obtained through the CANARIE Research Software Program Local Support Initiative.
