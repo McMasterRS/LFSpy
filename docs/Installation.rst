@@ -1,14 +1,14 @@
 Installation
-=================================
+============
 
-LFSpy is available on the pypy distribution platform at https://pypi.org/project/LFSpy/.
+LFSpy is available on the `Python Package Index (PyPI) <https://pypi.org/project/LFSpy/>`__.
 
-To install LFSpy along with its dependacies run the command:::
+To install LFSpy along with its dependencies run the command::
 
     pip install lfspy
 
-Dependancies
----------------------------------
+Dependencies
+------------
 
 LFS requires:
 

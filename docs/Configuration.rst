@@ -1,5 +1,5 @@
 Configuration
-=================================
+=============
 
 The localized feature selection method has a set of user configurable paramaters that can be tweaked to get your desired functionality. For a full description of each parameter refer to the papers listed in the citations section. The parameters are:
 

@@ -1,5 +1,5 @@
 Usage
-=================================
+=====
 To use LFSpy on its own::
 
     from LFSpy import LocalFeatureSelection

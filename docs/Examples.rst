@@ -1,5 +1,5 @@
 Examples
-=================================
+========
 Given here is an example demonstration of localized feature selection and LFSpy for feature selection and classification using the common Iris flower data set.
 
 For installation instructions please refer to the "Installation" section.
