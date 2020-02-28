@@ -1,5 +1,5 @@
 .vscode
 __pycache__
-LFSPy.egg-info
+*.egg-info
 dist
 build
