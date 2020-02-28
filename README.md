@@ -1,6 +1,6 @@
 # Localized Feature Selection (LFS)
 
-Full documentation can be found at: [lfspy.readthedocs.io](lfspy.readthedocs.io)
+Full documentation can be found at: [lfspy.readthedocs.io](https://lfspy.readthedocs.io)
 
 Localized feature selection (LFS) is a supervised machine learning approach for embedding localized feature selection in classification. The sample space is partitioned into overlapping regions, and subsets of features are selected that are optimal for classification within each local region. As the size and membership of the feature subsets can vary across regions, LFS is able to adapt to local variation across the entire sample space.
 

@@ -78,30 +78,30 @@ To use LFSpy as part of an sklearn pipeline::
 Tunable Parameters
 ---------------------------------
 
-alpha: (default: 19) the maximum number of selected features for each representative point
-gamma: (default: 0.2) impurity level tolerance, controls proportion of out-of-class samples can be in local region
-tau: (default: 2) number of passes through the training set
-sigma: (default: 1) adjusts weightings for observations based on their distance, values greater than 1 result in lower weighting
-n_beta: (default: 20) number of beta values to test, controls the relative weighting of intra-class vs. inter-class distance in the objective function
-nrrp: (default: 2000) number of iterations for randomized rounding process
-knn: (default: 1) number of nearest neighbours to compare for classification
+* alpha: (default: 19) the maximum number of selected features for each representative point
+* gamma: (default: 0.2) impurity level tolerance, controls proportion of out-of-class samples can be in local region
+* tau: (default: 2) number of passes through the training set
+* sigma: (default: 1) adjusts weightings for observations based on their distance, values greater than 1 result in lower weighting
+* n_beta: (default: 20) number of beta values to test, controls the relative weighting of intra-class vs. inter-class distance in the objective function
+* nrrp: (default: 2000) number of iterations for randomized rounding process
+* knn: (default: 1) number of nearest neighbours to compare for classification
 
 Authors
 ---------------------------------
 
 
-Oliver Cook
-Kiret Dhindsa
-Areeb Khawajaby
-Ron Harwood
-Thomas Mudway
+* Oliver Cook
+* Kiret Dhindsa
+* Areeb Khawajaby
+* Ron Harwood
+* Thomas Mudway
 
 Acknowledgments
 ---------------------------------
 
 
-N. Armanfard, JP. Reilly, and M. Komeili, "Local Feature Selection for Data Classification", IEEE Trans. on Pattern Analysis and Machine Intelligence, vol. 38, no. 6, pp. 1217-1227, 2016.
-N. Armanfard, JP. Reilly, and M. Komeili, "Logistic Localized Modeling of the Sample Space for Feature Selection and Classification", IEEE Transactions on Neural Networks and Learning Systems, vol. 29, no. 5, pp. 1396-1413, 2018.
+* N. Armanfard, JP. Reilly, and M. Komeili, "Local Feature Selection for Data Classification", IEEE Trans. on Pattern Analysis and Machine Intelligence, vol. 38, no. 6, pp. 1217-1227, 2016.
+* N. Armanfard, JP. Reilly, and M. Komeili, "Logistic Localized Modeling of the Sample Space for Feature Selection and Classification", IEEE Transactions on Neural Networks and Learning Systems, vol. 29, no. 5, pp. 1396-1413, 2018.
 
 
 .. toctree::
