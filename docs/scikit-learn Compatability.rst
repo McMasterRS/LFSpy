@@ -1,5 +1,5 @@
 scikit-learn Compatability
-=================================
+==========================
 
 To use LFSpy as part of an sklearn pipeline::
 
