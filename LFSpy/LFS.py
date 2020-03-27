@@ -69,15 +69,7 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
     """
 
     def __init__(
-        self,
-        alpha=19,
-        gamma=0.2,
-        tau=2,
-        sigma=1,
-        n_beta=20,
-        nrrp=2000,
-        knn=1,
-        rr_seed=None,
+        self, alpha=19, gamma=0.2, tau=2, sigma=1, n_beta=20, nrrp=2000, knn=1, rr_seed=None,
     ):
         self.alpha = alpha
         self.gamma = gamma
@@ -106,14 +98,9 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
         self.fstar = np.zeros(
             training_data.shape
         )  # selected features for each representative point; if fstar(i, j) = 1, ith feature is selected for jth representative point.
-        self.fstar_lin = np.zeros(
-            training_data.shape
-        )  # fstar before applying randomized rounding process
+        self.fstar_lin = np.zeros(training_data.shape)  # fstar before applying randomized rounding process
 
-        (
-            m_features,
-            n_observations,
-        ) = training_data.shape  # (M, N) M number of candidate features, N observations
+        (m_features, n_observations,) = training_data.shape  # (M, N) M number of candidate features, N observations
         n_total_cls = [
             np.sum(training_labels ^ 1),
             np.sum(training_labels),
@@ -153,81 +140,47 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
                 for i in range(n_observations):
                     # total distance along features selected by fstar
                     fstar_feature_dist_0 = np.sqrt(
-                        np.sum(
-                            observation_distances[
-                                :, excluding_selected & (training_labels == 0)
-                            ]
-                            * fstar_mask[:, i][..., None],
-                            axis=0,
-                        )
+                        np.sum(observation_distances[:, excluding_selected & (training_labels == 0)] * fstar_mask[:, i][..., None], axis=0,)
                     )
                     # total distance along features selected by fstar
                     fstar_feature_dist_1 = np.sqrt(
-                        np.sum(
-                            observation_distances[
-                                :, excluding_selected & (training_labels == 1)
-                            ]
-                            * fstar_mask[:, i][..., None],
-                            axis=0,
-                        )
+                        np.sum(observation_distances[:, excluding_selected & (training_labels == 1)] * fstar_mask[:, i][..., None], axis=0,)
                     )
-                    w11 = np.exp(
-                        (-((fstar_feature_dist_1 - np.min(fstar_feature_dist_1)) ** 2))
-                        / self.sigma
-                    )
-                    w22 = np.exp(
-                        (-((fstar_feature_dist_0 - np.min(fstar_feature_dist_0)) ** 2))
-                        / self.sigma
-                    )
-                    observation_weight[
-                        i, excluding_selected & (training_labels == 0)
-                    ] = w22
-                    observation_weight[
-                        i, excluding_selected & (training_labels == 1)
-                    ] = w11
+                    w11 = np.exp((-((fstar_feature_dist_1 - np.min(fstar_feature_dist_1)) ** 2)) / self.sigma)
+                    w22 = np.exp((-((fstar_feature_dist_0 - np.min(fstar_feature_dist_0)) ** 2)) / self.sigma)
+                    observation_weight[i, excluding_selected & (training_labels == 0)] = w22
+                    observation_weight[i, excluding_selected & (training_labels == 1)] = w11
 
                 # mean weight of all observations or features
                 average_observation_weight = np.mean(observation_weight, axis=0)
 
                 # normalized weight for all observations not including the current observation
                 normalized_weight = np.zeros((1, n_observations))
-                normalized_weight[:, training_labels == 0] = average_observation_weight[
-                    training_labels == 0
-                ] / np.sum(average_observation_weight[training_labels == 0])
-                normalized_weight[:, training_labels == 1] = average_observation_weight[
-                    training_labels == 1
-                ] / np.sum(average_observation_weight[training_labels == 1])
+                normalized_weight[:, training_labels == 0] = average_observation_weight[training_labels == 0] / np.sum(
+                    average_observation_weight[training_labels == 0]
+                )
+                normalized_weight[:, training_labels == 1] = average_observation_weight[training_labels == 1] / np.sum(
+                    average_observation_weight[training_labels == 1]
+                )
 
                 # Find the average weighted difference for each feature
                 average_feature_distances = [0, 0]
                 average_feature_distances[matching_label] = np.sum(
-                    normalized_weight[
-                        0, excluding_selected & (training_labels == matching_label)
-                    ]
-                    * observation_distances[
-                        :, excluding_selected & (training_labels == matching_label)
-                    ],
+                    normalized_weight[0, excluding_selected & (training_labels == matching_label)]
+                    * observation_distances[:, excluding_selected & (training_labels == matching_label)],
                     axis=1,
                 ) / (n_total_cls[matching_label] - 1)
                 average_feature_distances[nonmatching_label] = (
                     np.sum(
-                        normalized_weight[
-                            0,
-                            excluding_selected & (training_labels == nonmatching_label),
-                        ]
-                        * observation_distances[
-                            :,
-                            excluding_selected & (training_labels == nonmatching_label),
-                        ],
+                        normalized_weight[0, excluding_selected & (training_labels == nonmatching_label),]
+                        * observation_distances[:, excluding_selected & (training_labels == nonmatching_label),],
                         axis=1,
                     )
                     / n_total_cls[nonmatching_label]
                 )
 
                 # The inequality constraint matrix. Each row of A_ub specifies the coefficients of a linear inequality constraint on x.
-                A_ub_0 = np.concatenate(
-                    (np.ones((1, m_features)), -np.ones((1, m_features))), axis=0
-                )
+                A_ub_0 = np.concatenate((np.ones((1, m_features)), -np.ones((1, m_features))), axis=0)
                 # The inequality constraint vector. Each element represents an upper bound on the corresponding value of A_ub @ x.
                 b_ub_0 = np.array([[self.alpha], [-1]])
 
@@ -249,13 +202,7 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
                         beta = np.round(1 / self.n_beta * (i_beta + 1), decimals=15)
                         epsilon = beta * epsilon_max
 
-                        A_ub_1 = np.vstack(
-                            (
-                                np.ones((1, m_features)),
-                                -np.ones((1, m_features)),
-                                -average_feature_distances[nonmatching_label],
-                            )
-                        )
+                        A_ub_1 = np.vstack((np.ones((1, m_features)), -np.ones((1, m_features)), -average_feature_distances[nonmatching_label],))
                         # b1 TODO: Rename
                         b_ub_1 = np.vstack((self.alpha, -1, -epsilon))
 
@@ -305,84 +252,41 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
                                         # Each feature that has been selected in this option
                                         representative_points = training_data[option, :]
                                         # get our previously calculated feature distance for the selected features
-                                        option_distance_within[i_option] = (
-                                            average_feature_distances[matching_label]
-                                            @ option
-                                        )
-                                        active_point = representative_points[
-                                            :, i_observation
-                                        ][..., None]
+                                        option_distance_within[i_option] = average_feature_distances[matching_label] @ option
+                                        active_point = representative_points[:, i_observation][..., None]
                                         # We get the difference between this active point and all other rep points
-                                        rep_distances = np.abs(
-                                            np.sqrt(
-                                                np.sum(
-                                                    (
-                                                        -representative_points
-                                                        + active_point
-                                                    )
-                                                    ** 2,
-                                                    0,
-                                                )
-                                            )
-                                        )
+                                        rep_distances = np.abs(np.sqrt(np.sum((-representative_points + active_point) ** 2, 0,)))
 
                                         # we filter out all duplicate distances and sort in ascending order in order to find the smallest distance
-                                        unique_distances = np.msort(
-                                            np.unique(rep_distances)
-                                        )
+                                        unique_distances = np.msort(np.unique(rep_distances))
 
                                         # Increase the difference threshold until we have more dissimilar observations than similar observations
-                                        for i_distance, distance in enumerate(
-                                            unique_distances, start=0
-                                        ):
+                                        for i_distance, distance in enumerate(unique_distances, start=0):
 
                                             radious = distance
                                             # find all representative points that are atleast distance different
-                                            observations_within_distance = (
-                                                rep_distances <= distance
-                                            )
+                                            observations_within_distance = rep_distances <= distance
                                             n_cls_within = [
                                                 # the number of 0's that fall within this difference threshold
-                                                np.sum(
-                                                    (training_labels ^ 1)[
-                                                        observations_within_distance
-                                                    ]
-                                                ),
+                                                np.sum((training_labels ^ 1)[observations_within_distance]),
                                                 # the number of 1's within the zone
-                                                np.sum(
-                                                    training_labels[
-                                                        observations_within_distance
-                                                    ]
-                                                ),
+                                                np.sum(training_labels[observations_within_distance]),
                                             ]
 
                                             # we subtract 1 since we aren't including our selected point
-                                            n_cls_within[selected_label] = (
-                                                n_cls_within[selected_label] - 1
-                                            )
+                                            n_cls_within[selected_label] = n_cls_within[selected_label] - 1
 
                                             # We want there to be less of our similar class proportionally at this distance than our dissimilar class
-                                            if self.gamma * (
-                                                n_cls_within[selected_label]
-                                                / (n_total_cls[selected_label] - 1)
-                                            ) < (
-                                                n_cls_within[selected_label ^ 1]
-                                                / n_total_cls[selected_label ^ 1]
+                                            if self.gamma * (n_cls_within[selected_label] / (n_total_cls[selected_label] - 1)) < (
+                                                n_cls_within[selected_label ^ 1] / n_total_cls[selected_label ^ 1]
                                             ):
 
                                                 if i_distance > 0:
                                                     # this is the radious of how far we need to go for this
-                                                    radious = 0.5 * (
-                                                        radious
-                                                        + unique_distances[
-                                                            i_distance - 1
-                                                        ]
-                                                    )
+                                                    radious = 0.5 * (radious + unique_distances[i_distance - 1])
 
                                                     # increment the cound of how many classes are within this radious
-                                                    n_cls_within[selected_label] = (
-                                                        n_cls_within[selected_label] + 1
-                                                    )
+                                                    n_cls_within[selected_label] = n_cls_within[selected_label] + 1
 
                                                 # if the radious is 0, that is probably if the point is right on top of it, then pad it a bit
                                                 if radious == 0:
@@ -390,120 +294,56 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
 
                                                 # how many are within the zone
                                                 option_radiuses[i_option] = radious
-                                                observations_within_radious = (
-                                                    rep_distances <= radious
-                                                )
+                                                observations_within_radious = rep_distances <= radious
 
                                                 # these are which points are within the zone
                                                 rep_points_within_radious = representative_points[
-                                                    :,
-                                                    (observations_within_radious == 1),
+                                                    :, (observations_within_radious == 1),
                                                 ]
-                                                classes_within_radious = training_labels[
-                                                    observations_within_radious == 1
-                                                ]
+                                                classes_within_radious = training_labels[observations_within_radious == 1]
                                                 dr[0, i_option] = 0
                                                 far[0, i_option] = 0
 
-                                                for (
-                                                    i_point,
-                                                    rep_point_within,
-                                                ) in enumerate(
-                                                    rep_points_within_radious.T
-                                                ):
-                                                    rep_point_within = rep_point_within[
-                                                        ..., None
-                                                    ]
+                                                for (i_point, rep_point_within,) in enumerate(rep_points_within_radious.T):
+                                                    rep_point_within = rep_point_within[..., None]
 
                                                     # distance between this point and all other points
                                                     dist_quasi_test = np.absolute(
-                                                        np.sqrt(
-                                                            np.sum(
-                                                                (
-                                                                    representative_points
-                                                                    - rep_point_within
-                                                                )
-                                                                ** 2,
-                                                                axis=0,
-                                                            )
-                                                        )
+                                                        np.sqrt(np.sum((representative_points - rep_point_within) ** 2, axis=0,))
                                                     )
-                                                    dist_quasi_test_cls = classes_within_radious[
-                                                        i_point
-                                                    ]
+                                                    dist_quasi_test_cls = classes_within_radious[i_point]
 
                                                     # we once again sort the features by ascending difference
-                                                    min_uniq = np.sort(
-                                                        np.unique(dist_quasi_test)
-                                                    )
+                                                    min_uniq = np.sort(np.unique(dist_quasi_test))
                                                     total_nearest_neighbours = 0
 
                                                     # Searches until it finds k nearest neighbours
-                                                    for (
-                                                        i_distance_within,
-                                                        _,
-                                                    ) in enumerate(min_uniq):
+                                                    for (i_distance_within, _,) in enumerate(min_uniq):
                                                         # from smallest to largest, tries to find k nearest neighbours
-                                                        nearest_neighbours = (
-                                                            dist_quasi_test
-                                                            <= min_uniq[
-                                                                i_distance_within
-                                                            ]
-                                                        )
-                                                        total_nearest_neighbours = np.sum(
-                                                            nearest_neighbours
-                                                        )
-                                                        if (
-                                                            total_nearest_neighbours
-                                                            > self.knn
-                                                        ):
+                                                        nearest_neighbours = dist_quasi_test <= min_uniq[i_distance_within]
+                                                        total_nearest_neighbours = np.sum(nearest_neighbours)
+                                                        if total_nearest_neighbours > self.knn:
                                                             break
                                                     # number of nearest neighbours of each class
                                                     n_nearest_neighbours = [
-                                                        np.sum(
-                                                            nearest_neighbours
-                                                            & (training_labels ^ 1)
-                                                        ),
-                                                        np.sum(
-                                                            nearest_neighbours
-                                                            & training_labels
-                                                        ),
+                                                        np.sum(nearest_neighbours & (training_labels ^ 1)),
+                                                        np.sum(nearest_neighbours & training_labels),
                                                     ]
 
                                                     # The case where the this point's class is in the majority amongst neighbouring points in the localized radious
                                                     if (
-                                                        dist_quasi_test_cls
-                                                        == selected_label
-                                                        and (
-                                                            n_nearest_neighbours[
-                                                                selected_label
-                                                            ]
-                                                            - 1
-                                                        )
-                                                        > n_nearest_neighbours[
-                                                            selected_label ^ 1
-                                                        ]
+                                                        dist_quasi_test_cls == selected_label
+                                                        and (n_nearest_neighbours[selected_label] - 1) > n_nearest_neighbours[selected_label ^ 1]
                                                     ):
                                                         # Count the number of points that are in the majority
-                                                        dr[0, i_option] = (
-                                                            dr[0, i_option] + 1
-                                                        )
+                                                        dr[0, i_option] = dr[0, i_option] + 1
 
                                                     # The case where the this point's class is in the minority amongst neighbouring points in the localized radious, that is there are more dissimilar points within the radious
-                                                    if dist_quasi_test_cls == (
-                                                        selected_label ^ 1
-                                                    ) and n_nearest_neighbours[
-                                                        selected_label
-                                                    ] > (
-                                                        n_nearest_neighbours[
-                                                            selected_label ^ 1
-                                                        ]
-                                                        - 1
+                                                    if dist_quasi_test_cls == (selected_label ^ 1) and n_nearest_neighbours[selected_label] > (
+                                                        n_nearest_neighbours[selected_label ^ 1] - 1
                                                     ):
                                                         # count the number of times points are in the minority
-                                                        far[0, i_option] = (
-                                                            far[0, i_option] + 1
-                                                        )
+                                                        far[0, i_option] = far[0, i_option] + 1
                                                 break
 
                             eval_criteria = [
@@ -514,15 +354,9 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
                             # find the shortest within distance
                             i_lowest_distance_within = np.argmin(option_distance_within)
                             TT_binary = unique_options[:, i_lowest_distance_within]
-                            overall_feasibility[
-                                i_observation, i_beta
-                            ] = option_feasabilities[i_lowest_distance_within]
-                            overall_radious[i_observation, i_beta] = option_radiuses[
-                                i_lowest_distance_within
-                            ]
-                            overall_b_ratio[i_observation, i_beta] = eval_criteria[
-                                training_labels[i_observation]
-                            ][0, i_lowest_distance_within]
+                            overall_feasibility[i_observation, i_beta] = option_feasabilities[i_lowest_distance_within]
+                            overall_radious[i_observation, i_beta] = option_radiuses[i_lowest_distance_within]
+                            overall_b_ratio[i_observation, i_beta] = eval_criteria[training_labels[i_observation]][0, i_lowest_distance_within]
 
                             if overall_feasibility[i_observation, i_beta] == 1:
                                 tb_temp[:, i_observation, i_beta] = TT_binary
@@ -584,13 +418,7 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
 
         for t in range(H):
             s_class_1_sphere_knn[t], s_class_2_sphere_knn[t], _ = self.class_sim_m(
-                testing_data[:, t],
-                N,
-                training_data,
-                training_labels,
-                self.fstar,
-                self.gamma,
-                self.knn,
+                testing_data[:, t], N, training_data, training_labels, self.fstar, self.gamma, self.knn,
             )
 
         return s_class_1_sphere_knn, s_class_2_sphere_knn
@@ -661,9 +489,7 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
                 test_P = test[a_mask]
                 testA = patterns_P[:, i] - test_P
                 Dist_test = np.abs(np.sqrt(np.sum((patterns_P[:, i] - test_P) ** 2, 0)))
-                Dist_pat = np.abs(
-                    np.sqrt(np.sum((patterns_P - patterns_P[:, i][..., None]) ** 2, 0))
-                )
+                Dist_pat = np.abs(np.sqrt(np.sum((patterns_P - patterns_P[:, i][..., None]) ** 2, 0)))
                 EE_Rep = np.msort(Dist_pat)
                 remove = 0
                 if targets[i] == 1:
@@ -679,9 +505,7 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
                             F2 = Dist_pat <= r
                             NoCls1clst = np.sum(F2 & targets) - 1
                             NoCls2clst = np.sum(F2 & ~targets)
-                            if gamma * (NoCls1clst / (n_nt_cls_l - 1)) < (
-                                NoCls2clst / n_nt_cls_2
-                            ):
+                            if gamma * (NoCls1clst / (n_nt_cls_l - 1)) < (NoCls2clst / n_nt_cls_2):
                                 Next = 0
                                 if (k - 1) == 0:
                                     r = UNQ[k]
@@ -698,11 +522,7 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
                         if Dist_test <= r:
                             patterns_P = patterns * fstar[:, i][..., None]
                             test_P = test * fstar[:, i]
-                            Dist = np.abs(
-                                np.sqrt(
-                                    np.sum((patterns_P - test_P[..., None]) ** 2, 0)
-                                )
-                            )
+                            Dist = np.abs(np.sqrt(np.sum((patterns_P - test_P[..., None]) ** 2, 0)))
                             min1 = np.msort(Dist)
                             min_Uniq = np.unique(min1)
                             m = -1
@@ -731,9 +551,7 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
                             F2 = Dist_pat <= r
                             NoCls1clst = np.sum(F2 & targets)
                             NoCls2clst = np.sum(F2 & ~targets) - 1
-                            if gamma * (NoCls2clst / (n_nt_cls_2 - 1)) < (
-                                NoCls1clst / n_nt_cls_l
-                            ):
+                            if gamma * (NoCls2clst / (n_nt_cls_2 - 1)) < (NoCls1clst / n_nt_cls_l):
                                 Next = 0
                                 if (k - 1) == 0:
                                     r = UNQ[k]
@@ -751,11 +569,7 @@ class LocalFeatureSelection(ClassifierMixin, BaseEstimator):
                         if Dist_test <= r:
                             patterns_P = patterns * fstar[:, i][..., None]
                             test_P = test * fstar[:, i]
-                            Dist = np.abs(
-                                np.sqrt(
-                                    np.sum((patterns_P - test_P[..., None]) ** 2, 0)
-                                )
-                            )
+                            Dist = np.abs(np.sqrt(np.sum((patterns_P - test_P[..., None]) ** 2, 0)))
                             min1 = np.msort(Dist)
                             min_Uniq = np.unique(min1)
                             m = -1
