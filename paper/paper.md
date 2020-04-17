@@ -121,6 +121,13 @@ It can be seen that with both datasets LFS outperforms the other two methods, pa
 
 ![Comparison of classification accuracies obtained with different classifiers and increasing numbers of non-informative features using the Fisher Iris dataset available in `scikit-learn`.](IrisData_Results.png)
 
+### Comparison using data generated with `scikit-learn`
+For this comparison we use the same classifiers with the same configurations as described above, but instead make use of `make_classification` function in `scikit-learn`. This function provides us with more control so we can generate a dataset with properties that illustrate in more detail where `LFSpy` is particularly useful. For this example, we generate synthetic datasets to simulate a two-class classification problem with 50 samples (40 used for training, and 10 used for testing). In total, 12 datasets are created with varying degrees of complexity introduced through different properties. First, each class can be distributed over one, two, or three clusters (i.e., if each class is represented by three clusters, then it is made up of three distinct distributions with different statistics). Four datasets are created within each of these cases: 1) a simple problem with 5 informative features and zero non-informative features, 2) five informative features with 70 redundant features, (`r=70`) made up as combinations of the five informative features, 3) five informative features with 70 repeated features (`s=70`) made up as copies of the five redundant features, and 4) five informative features with 35 redundant features and 35 repeated features (`r=35, s=35`). 
+
+The results of this experiment, shown below, demonstrate how `LFSpy` can have an advantage in increasingly complex classification problems with large numbers of non-informative features of different kinds. In particular, its strategy of breaking up a classification problem into many small local problems instead of attempting to find a global solution allows LFS to perform well when each class is represented by multiple clusters with different statistics. 
+
+![Comparison of classification accuracies obtained with different classifiers and different kinds of complexities using data generated with `scikit-learn.datasets.make_classification`.](GenData_Results.png)
+
 # Acknowledgments
 Funding for this project was obtained through the CANARIE Research Software Program Local Support Initiative.
 
@@ -129,4 +136,5 @@ Funding for this project was obtained through the CANARIE Research Software Prog
 <!--
 [results_sample]: https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/SampleData_Results.png
 [results_iris]: https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/IrisData_Results.png
+[results_gen]: https://github.com/McMasterRS/LFSpy/blob/master/LFSpy/comparisons/GenData_Results.png
 -->
