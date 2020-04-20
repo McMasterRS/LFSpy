@@ -119,18 +119,18 @@ plotScores(scores_iris, 'Iris Data Classification Accuracies')
 
 
 # %% Compare across number of noise variables on Iris dataset
-#Score_LFS = []
+Score_LFS = []
 Score_SVM = []
 Score_RFC = []
 mlist = np.arange(0, 1001, 25)
 for m in mlist:
     training_data, training_labels, testing_data, testing_labels = load_dataset('iris', m=m)
     
-#    s1, _ = results_lfspy(training_data, training_labels, testing_data, testing_labels)
+    s1, _ = results_lfspy(training_data, training_labels, testing_data, testing_labels)
     s2, _ = results_rforest(training_data, training_labels, testing_data, testing_labels)
     s3, _ = results_fsvm(training_data, training_labels, testing_data, testing_labels)
     
-#    Score_LFS.append(s1)
+    Score_LFS.append(s1)
     Score_RFC.append(s2)
     Score_SVM.append(s3)
 
@@ -147,4 +147,99 @@ plt.title('Classification Accuracy by Number of Added Noise Variables', fontsize
 plt.legend(['LFS','Random Forest','SVM'], loc='lower right')
 plt.savefig('IrisData_noise_Results.png', bbox_inches='tight', pad_inches=0.1, dpi=300)
 
+
+# %% GenData Experiment
+def create_dataset(n_samples, n_features, n_informative, n_redundant, n_repeated, n_clusters):
+    '''
+    Create a synthetic dataset with desired properties.
+    '''    
+    X, Y = datasets.make_classification(n_samples=n_samples, 
+                                        n_features=n_features, 
+                                        n_informative=n_informative, 
+                                        n_redundant=n_redundant, 
+                                        n_repeated=n_repeated, 
+                                        n_classes=2, 
+                                        n_clusters_per_class=n_clusters, 
+                                        weights=None, 
+                                        flip_y=0.10, 
+                                        class_sep=1., 
+                                        hypercube=True, 
+                                        shift=None, 
+                                        scale=1.0, 
+                                        shuffle=True, 
+                                        random_state=321)
+    return X, Y
+
+def runExperiment():
+    '''
+    Run an example experiment showing the effect of redundant variables and 
+    repeated variables in a p >> n setting.
+    '''
+    clusters = [1, 2, 3]
+    param = [[50, 5, 5, 0, 0],
+             [50, 45, 5, 40, 0],
+             [50, 45, 5, 0, 40],
+             [50, 45, 5, 20, 20]]
+
+    scores = np.zeros((len(clusters), len(param), 3), dtype=float)
+
+    for c, nc in enumerate(clusters):
+                        
+        for (i,p) in enumerate(param):
+            X, Y = create_dataset(p[0], p[1], p[2], p[3], p[4], nc)
+            training_data = X[:40]
+            training_labels = Y[:40]
+            testing_data = X[40:]
+            testing_labels = Y[40:]
+    
+            scores[c,i,0], _ = results_lfspy(training_data, training_labels, testing_data, testing_labels)
+            scores[c,i,1], _ = results_rforest(training_data, training_labels, testing_data, testing_labels)
+            scores[c,i,2], _ = results_fsvm(training_data, training_labels, testing_data, testing_labels)
+
+    return scores
+
+def plotScoresGrouped(scores, title=None):
+    '''
+    Plot classification scores grouped by setting
+    '''
+    n, l, nclf = scores.shape
+    ind = np.arange(l)
+    fig, ax = plt.subplots(n,1,figsize=(8,6))
+    
+    for c in range(n):
+        slfs = np.squeeze(scores[c,:,0])
+        srfc = np.squeeze(scores[c,:,1])
+        ssvm = np.squeeze(scores[c,:,2])
+        
+        width = 0.3
+    
+        ax[c].bar(ind - width, slfs, width, label='LFS')
+        ax[c].bar(ind, srfc, width, label='RFC')
+        ax[c].bar(ind + width, ssvm, width, label='SVM')
+        
+        ax[c].set_ylim([0,1])
+        ax[c].set(ylabel='{} Cluster(s)'.format(c+1))
+        
+        for i, v in enumerate(slfs):
+            ax[c].text(i - width - 0.13, 0.3, '{:.{}f}'.format(v,2), size=12)
+        for i, v in enumerate(srfc):
+            ax[c].text(i - 0.13, 0.3, '{:.{}f}'.format(v,2), size=12)
+        for i, v in enumerate(ssvm):
+            ax[c].text(i + width -0.13, 0.3, '{:.{}f}'.format(v,2), size=12)
+        
+        if c == 0:
+            fig.suptitle(title, fontsize=14)
+            ax[c].legend()
+            ax[c].xaxis.set_visible(False)
+        if c == 1:
+            plt.ylabel('Accuracy')
+            ax[c].xaxis.set_visible(False)
+        if c == 2:
+            plt.xticks(range(4), labels=['r=0, s=0','r=40, s=0','r=0, s=40', 'r=20, s=20'])
+
+    plt.savefig('GenDataCompare4.png', bbox_inches='tight', pad_inches=0.1, dpi=300)    
+    return None
+
+scores = runExperiment()
+plotScoresGrouped(scores, 'Comparison with Generated Datasets')
 
